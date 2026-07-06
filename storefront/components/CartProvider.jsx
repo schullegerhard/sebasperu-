@@ -1,0 +1,38 @@
+'use client'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+
+const CartContext = createContext(null)
+export const useCart = () => useContext(CartContext)
+
+export default function CartProvider({ children }) {
+  const [cart, setCart] = useState([])
+  const [ready, setReady] = useState(false)
+  const [toast, setToast] = useState(null)
+
+  // Hidratar desde localStorage tras montar (evita desajustes SSR/cliente).
+  useEffect(() => {
+    try { const r = localStorage.getItem('sp_cart'); if (r) setCart(JSON.parse(r)) } catch {}
+    setReady(true)
+  }, [])
+  useEffect(() => { if (ready) localStorage.setItem('sp_cart', JSON.stringify(cart)) }, [cart, ready])
+
+  const addToCart = useCallback((p, qty = 1) => {
+    setCart((prev) => {
+      const f = prev.find((i) => i.id === p.id)
+      if (f) return prev.map((i) => (i.id === p.id ? { ...i, qty: i.qty + qty } : i))
+      return [...prev, { id: p.id, sku: p.sku, name: p.name, price: p.price, image: p.image, slug: p.slug, qty }]
+    })
+    setToast(`${p.name} agregado al carrito`)
+    clearTimeout(addToCart._t); addToCart._t = setTimeout(() => setToast(null), 2200)
+  }, [])
+
+  const count = cart.reduce((n, i) => n + i.qty, 0)
+  const total = cart.reduce((n, i) => n + i.qty * i.price, 0)
+
+  return (
+    <CartContext.Provider value={{ cart, count, total, addToCart }}>
+      {children}
+      {toast && <div className="toast">{toast}</div>}
+    </CartContext.Provider>
+  )
+}

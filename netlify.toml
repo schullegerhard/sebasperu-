@@ -1,0 +1,13 @@
+# Despliegue del storefront (Vite SPA) en Netlify.
+# El storefront funciona de forma autónoma con el catálogo estático; el panel
+# de administración/orders requiere además la API (ver render.yaml).
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Fallback SPA: cualquier ruta (/categoria/toner, /producto/...) sirve index.html
+# para que React Router la resuelva en el cliente (evita 404 al recargar).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

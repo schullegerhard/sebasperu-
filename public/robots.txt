@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /checkout
+Disallow: /carrito
+Disallow: /cuenta
+
+Sitemap: https://www.sebasperu.com/sitemap.xml

@@ -1,0 +1,33 @@
+# Render Blueprint — despliega la API + (opcional) el storefront Next.js.
+# En Render: New → Blueprint → conecta el repo → se crean los servicios.
+services:
+  - type: web
+    name: sebasperu-api
+    runtime: node
+    rootDir: api
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/index.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true        # Render genera un secreto seguro
+      - key: DATABASE_URL
+        sync: false                # pega tu URI de Supabase en el dashboard
+      - key: CORS_ORIGIN
+        sync: false                # ej. https://tu-storefront.vercel.app
+
+  - type: web
+    name: sebasperu-storefront
+    runtime: node
+    rootDir: storefront
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false                # URL pública de la API (arriba)
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
