@@ -18,3 +18,9 @@ storefront/.env.local
 *.log
 npm-debug.log*
 .DS_Store
+
+# Material de referencia del diseño (no forma parte de la app desplegable)
+Ecommerce de tecnología/
+Ecommerce de tecnología.zip
+default_shadcn_theme.css
+guidelines/
