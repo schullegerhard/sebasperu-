@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ProductImage, brandLogo } from '../../../components/imageMap.jsx'
+import ProductGallery from '../../../components/ProductGallery.jsx'
 import ProductCard from '../../../components/ProductCard.jsx'
 import AddToCart from '../../../components/AddToCart.jsx'
 import { Star, Truck, ShieldCheck, FileText, Whatsapp, Check, ChevronRight, ArrowRight } from '../../../components/Icons.jsx'
@@ -43,7 +44,15 @@ export default async function ProductPage({ params }) {
   const related = (product.related || []).map((id) => all.find((p) => p.id === id)).filter(Boolean)
   const Brand = brandLogo[product.brand]
   const ahorro = product.oldPrice ? product.oldPrice - product.price : 0
-  const specs = Object.entries(product.specs || {})
+  // Especificaciones = atributos administrables (panel) + specs estáticas, sin duplicar.
+  const attrRows = (Array.isArray(product.attributes) ? product.attributes : [])
+    .filter((a) => a && a.name && a.value != null && String(a.value).trim() !== '')
+    .map((a) => [String(a.name).trim(), String(a.value).trim()])
+  const seenK = new Set()
+  const specs = [...attrRows, ...Object.entries(product.specs || {})]
+    .filter(([k, v]) => { const key = String(k).toLowerCase(); if (seenK.has(key) || v == null || v === '') return false; seenK.add(key); return true })
+  // Galería: imagen principal + galería administrable, sin duplicados ni vacíos.
+  const gallery = [...new Set([product.image, ...(Array.isArray(product.gallery) ? product.gallery : []), ...(Array.isArray(product.images) ? product.images : [])].filter(Boolean))]
   const crumbs = [{ label: 'Inicio', to: '/' }, { label: category?.name || '', to: `/categoria/${product.category}` }, { label: product.name }]
 
   return (
@@ -60,15 +69,7 @@ export default async function ProductPage({ params }) {
       </nav>
 
       <div className="pd2">
-        <div className="pd2-gallery">
-          <div className="pd2-thumbs">
-            {[0, 1, 2, 3].map((i) => <div key={i} className={`pd2-thumb ${i === 0 ? 'active' : ''}`}><ProductImage image={product.image} /></div>)}
-          </div>
-          <div className="pd2-main">
-            <div className="pd2-stage"><div className="pd2-zoomable"><ProductImage image={product.image} /></div></div>
-            <div className="pd2-zoomhint">Vista de producto</div>
-          </div>
-        </div>
+        <ProductGallery images={gallery} tint={product.tint} label={product.label} />
 
         <div className="pd2-info">
           <div className="pd2-brand">{Brand && <Brand />}</div>

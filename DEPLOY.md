@@ -80,8 +80,35 @@ pública temporal a `http://localhost:4000` (tienda + `/admin` + API). Es tempor
 
 ---
 
+## Opción SEO — Storefront Next.js (SSR/SSG) para buen posicionamiento
+
+Para SEO óptimo (HTML renderizado en servidor, `sitemap.xml`, `robots.txt`,
+metadatos por página y JSON-LD), hay un storefront en **Next.js 14** en
+`storefront/` que **ya compila** (SSG/ISR de home, categorías y productos).
+
+- Lee los MISMOS datos que el admin vía la API: define
+  `NEXT_PUBLIC_API_URL=https://<tu-api>.onrender.com` (la de la Opción C).
+- Deploy recomendado: **Vercel** (New Project → carpeta `storefront/`) o Render.
+  Build: `npm install && npm run build`, start: `npm start`.
+- Arquitectura sugerida: **Next.js público** (tienda, para SEO) +
+  **servicio Opción C** para `/admin` y `/api`.
+
+**Pendiente para el cutover (decisión + trabajo, ~días):**
+1. La BD (Supabase) tiene el catálogo sembrado ANTIGUO; el Next.js (vía API)
+   mostraría esos datos. Hay que **re-sembrar** la BD con el catálogo actual
+   (`seedAll(pool, {force:true})` en `api/src/migrate.js` — ⚠️ borra ediciones)
+   o gestionar el catálogo nuevo desde el admin.
+2. Verificar paridad (carrito, checkout, cuenta, analítica) vs la SPA de Vite.
+3. Mantener DOS frontends sincronizados (coste de mantenimiento).
+
+> **Alternativa a considerar:** en lugar de mantener dos frontends, prerenderizar
+> la SPA de Vite actual (una sola base de código). Es una decisión de arquitectura
+> —conviene elegir antes de invertir en el cutover completo.
+
+---
+
 ### Recomendación
 - **Ver la tienda ya** → Opción A (Netlify Drop, sin backend).
 - **Entregar el admin gestionable** → Opción C (Render, un servicio, con Supabase).
-- Ambas pueden convivir; el admin (Opción C) es el que el cliente usará para
-  gestionar productos, imágenes y banners.
+- **SEO** → decidir entre completar el Next.js (`storefront/`) o prerenderizar la
+  SPA actual. La base Next.js ya existe y compila.
