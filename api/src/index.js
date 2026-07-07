@@ -12,6 +12,7 @@ import {
   listOrders, createOrder, setOrderStatus,
   listCustomers, listCoupons, saveCoupon, removeCoupon, toggleCoupon, getSettings, saveSettings,
   listAttributes, saveAttribute, removeAttribute,
+  listBanners, saveBanner, removeBanner, toggleBanner, moveBanner,
 } from './store.js'
 import { login, requireAuth, requireRole } from './auth.js'
 
@@ -89,6 +90,14 @@ app.get('/api/attributes', wrap(async (req, res) => ok(res, await listAttributes
 app.post('/api/attributes', requireAuth, requireRole(), wrap(async (req, res) => res.status(201).json(await saveAttribute(req.body))))
 app.put('/api/attributes/:id', requireAuth, requireRole(), wrap(async (req, res) => ok(res, await saveAttribute({ ...req.body, id: Number(req.params.id) }))))
 app.delete('/api/attributes/:id', requireAuth, requireRole(), wrap(async (req, res) => { await removeAttribute(Number(req.params.id)); res.json({ ok: true }) }))
+
+// Banners del carrusel principal (lectura pública para la tienda; escritura Marketing).
+app.get('/api/banners', wrap(async (req, res) => ok(res, await listBanners())))
+app.post('/api/banners', requireAuth, requireRole('Marketing'), wrap(async (req, res) => res.status(201).json(await saveBanner(req.body))))
+app.put('/api/banners/:id', requireAuth, requireRole('Marketing'), wrap(async (req, res) => ok(res, await saveBanner({ ...req.body, id: Number(req.params.id) }))))
+app.delete('/api/banners/:id', requireAuth, requireRole('Marketing'), wrap(async (req, res) => { await removeBanner(Number(req.params.id)); res.json({ ok: true }) }))
+app.patch('/api/banners/:id/toggle', requireAuth, requireRole('Marketing'), wrap(async (req, res) => ok(res, await toggleBanner(Number(req.params.id)))))
+app.patch('/api/banners/:id/move', requireAuth, requireRole('Marketing'), wrap(async (req, res) => ok(res, await moveBanner(Number(req.params.id), Number(req.body.dir)))))
 
 // Sirve el front-end (build de Vite) en el mismo origen, si existe el dist.
 // Así un solo dominio expone la tienda/admin (SPA) y la API (/api/*).

@@ -46,7 +46,12 @@ const mem = {
     { id: 5, name: 'Sergio Soporte', email: 'soporte@sebasperu.com', role: 'Soporte', password_hash: bcrypt.hashSync('sop123', 8) },
   ],
   attributes: [],
-  oseq: 1003, pseq: Math.max(...seedProducts.map((p) => p.id)) + 1, cseq: 5, aseq: 1,
+  banners: [
+    { id: 1, position: 0, active: true, theme: 'blue', badge: 'CYBERWEEK — Hasta 40% OFF', title: 'Tintas y Tóner al mejor precio del Perú', subtitle: 'HP, Epson, Canon, Brother y más marcas con garantía oficial. Envío a todo el país.', cta: 'Ver Tintas', link: '/categoria/tintas', image: '/img/photo-1612815154858-60aa4c59eaa6.jpg' },
+    { id: 2, position: 1, active: true, theme: 'orange', badge: 'NUEVA COLECCIÓN 2024', title: 'Laptops HP, Dell y Lenovo desde S/ 1,899', subtitle: 'Procesadores Intel Core i5 e i7 de 12ª y 13ª generación. Cuotas sin intereses.', cta: 'Ver Laptops', link: '/categoria/laptops-pc', image: '/img/photo-1517336714731-489689fd1ca8.jpg' },
+    { id: 3, position: 2, active: true, theme: 'green', badge: 'STOCK DISPONIBLE', title: 'Tóner original para impresoras láser', subtitle: 'HP, Samsung, Brother y Epson. Entrega en 24 horas en Lima.', cta: 'Ver Tóner', link: '/categoria/toner', image: '/img/photo-1586953208448-b95a79798f07.jpg' },
+  ],
+  oseq: 1003, pseq: Math.max(...seedProducts.map((p) => p.id)) + 1, cseq: 5, aseq: 1, bseq: 3,
 }
 
 const slugify = (s) => (s || '').toString().toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -268,6 +273,76 @@ export async function saveAttribute(input) {
 export async function removeAttribute(id) {
   if (usingDb) { await pool.query('DELETE FROM attributes WHERE id=$1', [id]); return true }
   mem.attributes = mem.attributes.filter((a) => a.id !== id); return true
+}
+
+/* ============================== BANNERS (carrusel home) ============================== */
+function cleanBanner(input) {
+  return {
+    theme: input.theme || 'blue',                 // blue | orange | green | dark
+    badge: (input.badge || '').trim(),
+    title: (input.title || '').trim(),
+    subtitle: (input.subtitle || '').trim(),
+    cta: (input.cta || '').trim(),
+    link: (input.link || '/productos').trim(),
+    image: input.image || '',                     // data URL (subida) o ruta /img/…
+    active: input.active !== false,
+  }
+}
+export async function listBanners() {
+  if (usingDb) return (await pool.query('SELECT data FROM banners ORDER BY position, id')).rows.map((r) => r.data)
+  return [...mem.banners].sort((a, b) => a.position - b.position)
+}
+export async function saveBanner(input) {
+  const clean = cleanBanner(input)
+  if (usingDb) {
+    if (input.id) {
+      const cur = (await pool.query('SELECT data FROM banners WHERE id=$1', [input.id])).rows[0]?.data
+      if (!cur) return null
+      const b = { ...cur, ...clean, id: Number(input.id) }
+      await pool.query('UPDATE banners SET active=$2, data=$3 WHERE id=$1', [b.id, b.active, JSON.stringify(b)])
+      return b
+    }
+    const pos = (await pool.query('SELECT COALESCE(MAX(position),0)+1 AS n FROM banners')).rows[0].n
+    const r = await pool.query('INSERT INTO banners (position, active, data) VALUES ($1,$2,$3) RETURNING id', [pos, clean.active, JSON.stringify(clean)])
+    const id = r.rows[0].id
+    const b = { ...clean, id, position: pos }
+    await pool.query('UPDATE banners SET data=$2 WHERE id=$1', [id, JSON.stringify(b)])
+    return b
+  }
+  if (input.id) {
+    const i = mem.banners.findIndex((b) => b.id === Number(input.id))
+    if (i < 0) return null
+    mem.banners[i] = { ...mem.banners[i], ...clean, id: Number(input.id) }; return mem.banners[i]
+  }
+  const pos = mem.banners.length ? Math.max(...mem.banners.map((b) => b.position)) + 1 : 0
+  const b = { ...clean, id: ++mem.bseq, position: pos }
+  mem.banners.push(b); return b
+}
+export async function removeBanner(id) {
+  if (usingDb) { await pool.query('DELETE FROM banners WHERE id=$1', [id]); return true }
+  mem.banners = mem.banners.filter((b) => b.id !== id); return true
+}
+export async function toggleBanner(id) {
+  if (usingDb) {
+    const cur = (await pool.query('SELECT data FROM banners WHERE id=$1', [id])).rows[0]?.data
+    if (!cur) return null
+    const b = { ...cur, active: !cur.active }
+    await pool.query('UPDATE banners SET active=$2, data=$3 WHERE id=$1', [id, b.active, JSON.stringify(b)])
+    return b
+  }
+  const b = mem.banners.find((x) => x.id === id); if (b) b.active = !b.active; return b
+}
+export async function moveBanner(id, dir) {
+  const list = await listBanners()
+  const i = list.findIndex((b) => b.id === id); const j = i + dir
+  if (i < 0 || j < 0 || j >= list.length) return list
+  if (usingDb) {
+    await pool.query('UPDATE banners SET position=$2 WHERE id=$1', [list[i].id, j])
+    await pool.query('UPDATE banners SET position=$2 WHERE id=$1', [list[j].id, i])
+  } else {
+    list[i].position = j; list[j].position = i
+  }
+  return listBanners()
 }
 
 /* ============================== USUARIOS ============================== */

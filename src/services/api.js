@@ -46,6 +46,14 @@ export const Attributes = {
   remove: (id) => http.del(`/api/attributes/${id}`),
 }
 
+export const Banners = {
+  list: () => http.get('/api/banners'),
+  save: (data) => (data.id ? http.put(`/api/banners/${data.id}`, data) : http.post('/api/banners', data)),
+  remove: (id) => http.del(`/api/banners/${id}`),
+  toggle: (id) => http.patch(`/api/banners/${id}/toggle`),
+  move: (id, dir) => http.patch(`/api/banners/${id}/move`, { dir }),
+}
+
 // Algunas lecturas dependen del rol; si la API responde 403, devolvemos vacío.
 const safe = (p) => p.catch(() => [])
 

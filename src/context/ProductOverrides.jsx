@@ -17,31 +17,37 @@ const STATIC_IDS = new Set(staticProducts.map((p) => p.id))
 //   • cats: [categoríaAPI, …]     → jerarquía padre/hijo (campo `parent`) para que
 //                                    una categoría padre agregue los productos de
 //                                    sus subcategorías
-const Ctx = createContext({ byId: {}, list: [], cats: [], attrs: [] })
+const Ctx = createContext({ byId: {}, list: [], cats: [], attrs: [], banners: [] })
 
 export function ProductOverridesProvider({ children }) {
-  const [state, setState] = useState({ byId: {}, list: [], cats: [], attrs: [] })
+  const [state, setState] = useState({ byId: {}, list: [], cats: [], attrs: [], banners: [] })
   useEffect(() => {
     let alive = true
     Promise.all([
       http.get('/api/products').catch(() => null),
       http.get('/api/categories').catch(() => null),
       http.get('/api/attributes').catch(() => null),
-    ]).then(([rows, cats, attrs]) => {
+      http.get('/api/banners').catch(() => null),
+    ]).then(([rows, cats, attrs, banners]) => {
       if (!alive) return
-      const next = { byId: {}, list: [], cats: [], attrs: [] }
+      const next = { byId: {}, list: [], cats: [], attrs: [], banners: [] }
       if (Array.isArray(rows)) {
         for (const p of rows) if (p && p.id != null) next.byId[p.id] = p
         next.list = rows
       }
       if (Array.isArray(cats)) next.cats = cats
       if (Array.isArray(attrs)) next.attrs = attrs
+      if (Array.isArray(banners)) next.banners = banners
       setState(next)
     })
     return () => { alive = false }
   }, [])
   return <Ctx.Provider value={state}>{children}</Ctx.Provider>
 }
+
+// Banners activos del carrusel, gestionados en el admin. Vacío → la Home usa
+// los banners estáticos del diseño como respaldo.
+export const useBanners = () => useContext(Ctx).banners
 
 // Mapa { id → productoAPI }. Vacío fuera del proveedor → seguro en admin/tests.
 export const useProductOverrides = () => useContext(Ctx).byId

@@ -79,3 +79,11 @@ CREATE TABLE IF NOT EXISTS attributes (
   name TEXT NOT NULL,
   data JSONB NOT NULL          -- { id, name, values:[], categories:[] }
 );
+
+-- Banners del carrusel principal (home) gestionados en el admin.
+CREATE TABLE IF NOT EXISTS banners (
+  id       SERIAL PRIMARY KEY,
+  position INT NOT NULL DEFAULT 0,
+  active   BOOLEAN DEFAULT TRUE,
+  data     JSONB NOT NULL      -- { id, theme, badge, title, subtitle, cta, link, image, active }
+);

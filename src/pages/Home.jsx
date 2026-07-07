@@ -6,6 +6,7 @@ import {
 } from '../components/Icons.jsx'
 import { ProductImage } from '../components/imageMap.jsx'
 import { useStore } from '../context/StoreContext.jsx'
+import { useBanners } from '../context/ProductOverrides.jsx'
 import { useSeo } from '../lib/seo.js'
 import { peso } from '../data/catalog.js'
 import { productSlug } from '../data/storefront.js'
@@ -43,10 +44,25 @@ const heroSlides = [
   },
 ]
 
+// Convierte un banner del admin al formato de diapositiva del carrusel.
+const bannerToSlide = (b) => ({
+  theme: b.theme || 'blue',
+  badgeStyle: (!b.theme || b.theme === 'blue') ? 'gold' : 'white',
+  badge: b.badge,
+  title: b.title,
+  sub: b.subtitle,
+  cta: b.cta || 'Ver más',
+  to: b.link || '/productos',
+  img: b.image,
+})
+
 const Hero = () => {
+  // Banners gestionados en el admin (activos); si no hay, usa los del diseño.
+  const managed = useBanners().filter((b) => b && b.active)
+  const slides = managed.length ? managed.map(bannerToSlide) : heroSlides
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
-  const n = heroSlides.length
+  const n = slides.length
   const go = (k) => setI((k + n) % n)
   useEffect(() => {
     if (paused) return undefined
@@ -54,20 +70,22 @@ const Hero = () => {
     return () => clearInterval(id)
   }, [paused, n])
 
+  const cur = n ? ((i % n) + n) % n : 0  // índice seguro si cambia el nº de banners
+
   return (
     <section className="hero3">
       <div className="container">
         <div className="hero3-inner" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-          <div className="hero3-track" style={{ transform: `translateX(-${i * 100}%)` }}>
-            {heroSlides.map((s, idx) => (
-              <div className={`hero3-slide t-${s.theme}`} key={idx} aria-hidden={idx !== i}>
+          <div className="hero3-track" style={{ transform: `translateX(-${cur * 100}%)` }}>
+            {slides.map((s, idx) => (
+              <div className={`hero3-slide t-${s.theme}`} key={idx} aria-hidden={idx !== cur}>
                 <div className="hero3-content">
-                  <span className={`hero3-badge ${s.badgeStyle}`}><Zap size={14} /> {s.badge}</span>
+                  {s.badge && <span className={`hero3-badge ${s.badgeStyle}`}><Zap size={14} /> {s.badge}</span>}
                   <h1>{s.title}</h1>
                   <p>{s.sub}</p>
                   <div className="hero3-btns">
-                    <Link className="hero3-btn primary" to={s.to} tabIndex={idx === i ? 0 : -1}>{s.cta} <ArrowRight size={16} /></Link>
-                    <Link className="hero3-btn ghost" to="/productos" tabIndex={idx === i ? 0 : -1}>Ver todo</Link>
+                    <Link className="hero3-btn primary" to={s.to} tabIndex={idx === cur ? 0 : -1}>{s.cta} <ArrowRight size={16} /></Link>
+                    <Link className="hero3-btn ghost" to="/productos" tabIndex={idx === cur ? 0 : -1}>Ver todo</Link>
                   </div>
                   <div className="hero3-chips">
                     {heroChips.map((c) => <span className="hero3-chip" key={c}><Shield size={11} /> {c}</span>)}
@@ -80,8 +98,8 @@ const Hero = () => {
           <button className="hero3-arrow left" onClick={() => go(i - 1)} aria-label="Anterior"><ChevronLeft size={20} /></button>
           <button className="hero3-arrow right" onClick={() => go(i + 1)} aria-label="Siguiente"><ChevronRight size={20} /></button>
           <div className="hero3-dots">
-            {heroSlides.map((_, idx) => (
-              <button key={idx} className={idx === i ? 'on' : ''} onClick={() => go(idx)} aria-label={`Ir a la diapositiva ${idx + 1}`} />
+            {slides.map((_, idx) => (
+              <button key={idx} className={idx === cur ? 'on' : ''} onClick={() => go(idx)} aria-label={`Ir a la diapositiva ${idx + 1}`} />
             ))}
           </div>
         </div>

@@ -18,7 +18,7 @@ export const ROLE_PERMS = {
   Administrador: ['*'],
   Vendedor: ['dashboard', 'orders', 'customers', 'reports'],
   'Almacén': ['dashboard', 'orders', 'inventory', 'products'],
-  Marketing: ['dashboard', 'coupons', 'reports', 'settings'],
+  Marketing: ['dashboard', 'coupons', 'banners', 'reports', 'settings'],
   Soporte: ['dashboard', 'orders', 'customers'],
 }
 
@@ -26,7 +26,7 @@ export const ROLE_PERMS = {
 const MANAGE_PERMS = {
   Administrador: ['*'],
   'Almacén': ['inventory', 'orders'],
-  Marketing: ['coupons', 'settings'],
+  Marketing: ['coupons', 'banners', 'settings'],
   Vendedor: [],
   Soporte: [],
 }
