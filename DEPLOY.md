@@ -33,15 +33,55 @@ El repo ya está inicializado (`git`, rama `main`, commits listos).
    La configuración ya está en `netlify.toml` / `vercel.json`
    (build: `npm run build`, publish: `dist`). Deploy automático en cada push.
 
-## Opción C — Un solo servicio con la API (tienda + admin + pedidos)
+## Opción C — Un solo servicio con la API  →  incluye el ADMIN  ⭐
 
-La API (`api/src/index.js`) sirve `dist/` en el mismo origen. Para un deploy
-todo-en-uno en Render, el `buildCommand` debe construir el front antes de
-arrancar la API (build en la raíz → `dist/`, luego `node api/src/index.js`).
-Requiere además `DATABASE_URL` (Supabase/Postgres). Ver `render.yaml`.
+Este es el deploy que necesita el **panel de administración** (`/admin`) y todo
+lo gestionable (productos, categorías, atributos, **banners**, pedidos, cupones).
+Un solo servicio sirve TODO en un dominio:
+
+- Tienda → `https://tu-app.onrender.com/`
+- Admin → `https://tu-app.onrender.com/admin`
+- API → `https://tu-app.onrender.com/api/*`
+
+La API (`api/src/index.js`) sirve el build de Vite (`dist/`) en el mismo origen,
+así que no hace falta CORS ni un segundo dominio. Ya está todo en `render.yaml`.
+
+### Pasos (Render, gratis)
+1. Sube el repo a GitHub (ver Opción B, paso 1).
+2. En **Render** → **New → Blueprint** → conecta el repo. Detecta `render.yaml`
+   y crea el servicio `sebasperu` con:
+   - build: `npm install && npm run build && npm install --prefix api`
+   - start: `node api/src/index.js`
+3. En el dashboard del servicio → **Environment** → añade:
+   - `DATABASE_URL` = tu URI de **Supabase/Postgres** (Session pooler, IPv4).
+   - `JWT_SECRET` = Render lo genera solo (o pon uno propio).
+4. Deploy. Al arrancar, la API crea las tablas y (si la BD está vacía) siembra el
+   catálogo + usuarios automáticamente (`api/src/migrate.js`).
+
+### Acceso al admin
+- URL: `https://tu-app.onrender.com/admin`
+- Usuarios demo sembrados (¡**cámbialos en producción**!):
+
+  | Rol | Email | Contraseña |
+  |---|---|---|
+  | Administrador | `admin@sebasperu.com` | `admin123` |
+  | Marketing (cupones/banners) | `marketing@sebasperu.com` | `mkt123` |
+  | Almacén (stock/pedidos) | `almacen@sebasperu.com` | `alm123` |
+
+  > 🔒 **Seguridad:** cambia estas contraseñas antes de entregar al cliente
+  > (edita `api/src/seed-data.js` / la tabla `users`, o crea usuarios nuevos y
+  > borra los demo). El `JWT_SECRET` debe ser único y privado.
+
+### Acceso inmediato sin deploy (túnel temporal)
+Para mostrar el admin **hoy** sin desplegar, expón la API local con un túnel:
+`node scripts/tunnel.mjs` (usa `ngrok`; requiere un authtoken gratis). Da una URL
+pública temporal a `http://localhost:4000` (tienda + `/admin` + API). Es temporal
+—para permanente usa Render arriba.
 
 ---
 
-### Recomendación para hoy
-Usa **Opción A** para tener un link en vivo en minutos y enviárselo al cliente,
-y en paralelo prepara la **Opción B** para el deploy permanente.
+### Recomendación
+- **Ver la tienda ya** → Opción A (Netlify Drop, sin backend).
+- **Entregar el admin gestionable** → Opción C (Render, un servicio, con Supabase).
+- Ambas pueden convivir; el admin (Opción C) es el que el cliente usará para
+  gestionar productos, imágenes y banners.

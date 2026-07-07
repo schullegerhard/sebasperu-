@@ -1,33 +1,29 @@
-# Render Blueprint — despliega la API + (opcional) el storefront Next.js.
-# En Render: New → Blueprint → conecta el repo → se crean los servicios.
+# Render Blueprint — un solo servicio que sirve TODO en un dominio:
+#   • Tienda (storefront SPA)      → /
+#   • Panel de administración      → /admin
+#   • API REST                     → /api/*
+# La API (api/src/index.js) sirve el build de Vite (dist/) en el mismo origen,
+# por eso el buildCommand compila el front ANTES de instalar la API.
+#
+# En Render:  New → Blueprint → conecta el repo → se crea el servicio.
+# Luego, en el dashboard del servicio, define DATABASE_URL (tu URI de Supabase).
 services:
   - type: web
-    name: sebasperu-api
+    name: sebasperu
     runtime: node
-    rootDir: api
     plan: free
-    buildCommand: npm install
-    startCommand: node src/index.js
+    buildCommand: npm install && npm run build && npm install --prefix api
+    startCommand: node api/src/index.js
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
+      - key: NODE_VERSION
+        value: "20"
       - key: JWT_SECRET
         generateValue: true        # Render genera un secreto seguro
       - key: DATABASE_URL
-        sync: false                # pega tu URI de Supabase en el dashboard
-      - key: CORS_ORIGIN
-        sync: false                # ej. https://tu-storefront.vercel.app
+        sync: false                # pega tu URI de Supabase/Postgres en el dashboard
+      # CORS no hace falta: tienda, admin y API comparten el mismo origen.
 
-  - type: web
-    name: sebasperu-storefront
-    runtime: node
-    rootDir: storefront
-    plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    autoDeploy: true
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        sync: false                # URL pública de la API (arriba)
-      - key: NEXT_PUBLIC_SITE_URL
-        sync: false
+# (Opcional) Storefront Next.js para SEO — desplegar por separado cuando esté listo.
+# Ver storefront/ y la sección "Opción SEO" de DEPLOY.md.
