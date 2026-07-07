@@ -24,3 +24,6 @@ Ecommerce de tecnología/
 Ecommerce de tecnología.zip
 default_shadcn_theme.css
 guidelines/
+
+# Config local de Claude Code (planes, settings)
+.claude/

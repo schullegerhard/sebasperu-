@@ -354,56 +354,91 @@ const mk = (id, [name, brand, category, subcategory, image, price, oldPrice, rat
   compatibilities: [], related: [],
 })
 
+// Fotos de producto reales (Unsplash, servidas localmente en /public/img) para
+// los rubros nuevos. Cada clave apunta a una foto acorde al tipo de producto.
+const ph = (id) => `/img/photo-${id}.jpg`
+const PH = {
+  router: ph('1606904825846-647eb07f5be2'),
+  switch: ph('1544197150-b99a580bb7a8'),
+  ssd: ph('1628557118391-56cd62c9f2cb'),
+  hdd: ph('1531492746076-161ca9bcad58'),
+  usb: ph('1587145820098-23e484e69816'),
+  ram: ph('1562976540-1502c2145186'),
+  mouse: ph('1615663245857-ac93bb7c39e7'),
+  keyboard: ph('1618384887929-16ec33fab9ef'),
+  speakers: ph('1545454675-3531b543be5d'),
+  webcam: ph('1588196749597-9ff075ee6b5b'),
+  psu: ph('1716062890647-60feae0609d0'),
+  psuFan: ph('1675893857450-783969c8922f'),
+  cctv: ph('1549109926-58f039549485'),
+  calc: ph('1626266061368-46a8f578ddd6'),
+  backpack: ph('1553062407-98eeb64c6a62'),
+  hdmi: ph('1595756630452-736bc8ef3693'),
+}
+
 const extraRows = [
   // Redes
-  ['Router TP-Link Archer AX23 WiFi 6 Dual Band AX1800', 'TP-Link', 'redes', 'routers', 'router', 199, 249, 4.7, 210, 'OFERTA'],
-  ['Router TP-Link Archer C80 AC1900 MU-MIMO', 'TP-Link', 'redes', 'routers', 'router', 179, 0, 4.6, 143, 'NUEVO'],
-  ['Access Point Ubiquiti UniFi U6 Lite WiFi 6', 'Ubiquiti', 'redes', 'access-point', 'router', 329, 389, 4.8, 96, ''],
-  ['Switch TP-Link TL-SG1008D 8 Puertos Gigabit', 'TP-Link', 'redes', 'switches', 'router', 129, 0, 4.7, 178, ''],
-  ['Switch TP-Link TL-SG1016 16 Puertos Gigabit', 'TP-Link', 'redes', 'switches', 'router', 289, 349, 4.7, 64, ''],
-  ['Adaptador WiFi USB TP-Link Archer T3U AC1300', 'TP-Link', 'redes', 'cableado', 'router', 69, 89, 4.5, 132, ''],
-  ['Cable de Red UTP Cat6 Patch Cord 3 Metros', 'Genérico', 'redes', 'cableado', 'router', 15, 0, 4.5, 320, ''],
+  ['Router TP-Link Archer AX23 WiFi 6 Dual Band AX1800', 'TP-Link', 'redes', 'routers', PH.router, 199, 249, 4.7, 210, 'OFERTA'],
+  ['Router TP-Link Archer C80 AC1900 MU-MIMO', 'TP-Link', 'redes', 'routers', PH.router, 179, 0, 4.6, 143, 'NUEVO'],
+  ['Access Point Ubiquiti UniFi U6 Lite WiFi 6', 'Ubiquiti', 'redes', 'access-point', PH.router, 329, 389, 4.8, 96, ''],
+  ['Switch TP-Link TL-SG1008D 8 Puertos Gigabit', 'TP-Link', 'redes', 'switches', PH.switch, 129, 0, 4.7, 178, ''],
+  ['Switch TP-Link TL-SG1016 16 Puertos Gigabit', 'TP-Link', 'redes', 'switches', PH.switch, 289, 349, 4.7, 64, ''],
+  ['Adaptador WiFi USB TP-Link Archer T3U AC1300', 'TP-Link', 'redes', 'cableado', PH.usb, 69, 89, 4.5, 132, ''],
+  ['Cable de Red UTP Cat6 Patch Cord 3 Metros', 'Genérico', 'redes', 'cableado', PH.hdmi, 15, 0, 4.5, 320, ''],
   // Almacenamiento
-  ['SSD Kingston A400 480GB SATA 2.5"', 'Kingston', 'almacenamiento', 'ssd', 'laptop', 129, 159, 4.8, 540, 'OFERTA'],
-  ['SSD Samsung 980 1TB NVMe M.2 PCIe 3.0', 'Samsung', 'almacenamiento', 'ssd', 'laptop', 329, 399, 4.9, 410, ''],
-  ['Disco Duro Externo Western Digital Elements 1TB USB 3.0', 'Western Digital', 'almacenamiento', 'discos-duros', 'laptop', 189, 0, 4.7, 388, 'NUEVO'],
-  ['Disco Duro Interno Seagate Barracuda 2TB 7200RPM', 'Seagate', 'almacenamiento', 'discos-duros', 'laptop', 219, 259, 4.7, 176, ''],
-  ['Memoria USB Kingston DataTraveler 64GB USB 3.2', 'Kingston', 'almacenamiento', 'usb-microsd', 'laptop', 29, 39, 4.6, 612, ''],
-  ['Tarjeta MicroSD SanDisk Ultra 128GB Clase 10', 'SanDisk', 'almacenamiento', 'usb-microsd', 'laptop', 45, 59, 4.8, 720, ''],
-  ['Memoria RAM Kingston Fury 8GB DDR4 3200MHz', 'Kingston', 'almacenamiento', 'memorias-ram', 'laptop', 99, 129, 4.8, 264, ''],
-  ['Memoria RAM Kingston Fury 16GB DDR5 5600MHz', 'Kingston', 'almacenamiento', 'memorias-ram', 'laptop', 259, 0, 4.8, 88, 'NUEVO'],
+  ['SSD Kingston A400 480GB SATA 2.5"', 'Kingston', 'almacenamiento', 'ssd', PH.ssd, 129, 159, 4.8, 540, 'OFERTA'],
+  ['SSD Samsung 980 1TB NVMe M.2 PCIe 3.0', 'Samsung', 'almacenamiento', 'ssd', PH.ssd, 329, 399, 4.9, 410, ''],
+  ['Disco Duro Externo Western Digital Elements 1TB USB 3.0', 'Western Digital', 'almacenamiento', 'discos-duros', PH.hdd, 189, 0, 4.7, 388, 'NUEVO'],
+  ['Disco Duro Interno Seagate Barracuda 2TB 7200RPM', 'Seagate', 'almacenamiento', 'discos-duros', PH.hdd, 219, 259, 4.7, 176, ''],
+  ['Memoria USB Kingston DataTraveler 64GB USB 3.2', 'Kingston', 'almacenamiento', 'usb-microsd', PH.usb, 29, 39, 4.6, 612, ''],
+  ['Tarjeta MicroSD SanDisk Ultra 128GB Clase 10', 'SanDisk', 'almacenamiento', 'usb-microsd', PH.usb, 45, 59, 4.8, 720, ''],
+  ['Memoria RAM Kingston Fury 8GB DDR4 3200MHz', 'Kingston', 'almacenamiento', 'memorias-ram', PH.ram, 99, 129, 4.8, 264, ''],
+  ['Memoria RAM Kingston Fury 16GB DDR5 5600MHz', 'Kingston', 'almacenamiento', 'memorias-ram', PH.ram, 259, 0, 4.8, 88, 'NUEVO'],
   // Periféricos
-  ['Mouse Logitech M170 Inalámbrico', 'Logitech', 'perifericos', 'mouse-teclados', 'headset', 39, 49, 4.6, 430, ''],
-  ['Teclado Logitech K120 USB Resistente a Salpicaduras', 'Logitech', 'perifericos', 'mouse-teclados', 'headset', 45, 0, 4.7, 512, ''],
-  ['Combo Teclado y Mouse Logitech MK270 Inalámbrico', 'Logitech', 'perifericos', 'mouse-teclados', 'headset', 89, 109, 4.7, 298, ''],
-  ['Mouse Gamer Logitech G203 Lightsync RGB 8000 DPI', 'Logitech', 'perifericos', 'gaming', 'headset', 119, 149, 4.8, 356, 'OFERTA'],
-  ['Teclado Gamer Redragon Kumara K552 Mecánico RGB', 'Redragon', 'perifericos', 'gaming', 'headset', 149, 189, 4.7, 244, ''],
-  ['Headset Gamer HyperX Cloud Stinger Core 7.1', 'HyperX', 'perifericos', 'gaming', 'headset', 199, 249, 4.8, 187, ''],
-  ['Webcam Logitech C920 HD Pro 1080p', 'Logitech', 'perifericos', 'webcams', 'headset', 269, 319, 4.8, 402, 'NUEVO'],
-  ['Parlantes Logitech Z200 Stereo 2.0', 'Logitech', 'perifericos', 'audio', 'headset', 129, 0, 4.6, 133, ''],
+  ['Mouse Logitech M170 Inalámbrico', 'Logitech', 'perifericos', 'mouse-teclados', PH.mouse, 39, 49, 4.6, 430, ''],
+  ['Teclado Logitech K120 USB Resistente a Salpicaduras', 'Logitech', 'perifericos', 'mouse-teclados', PH.keyboard, 45, 0, 4.7, 512, ''],
+  ['Combo Teclado y Mouse Logitech MK270 Inalámbrico', 'Logitech', 'perifericos', 'mouse-teclados', PH.keyboard, 89, 109, 4.7, 298, ''],
+  ['Mouse Gamer Logitech G203 Lightsync RGB 8000 DPI', 'Logitech', 'perifericos', 'gaming', PH.mouse, 119, 149, 4.8, 356, 'OFERTA'],
+  ['Teclado Gamer Redragon Kumara K552 Mecánico RGB', 'Redragon', 'perifericos', 'gaming', PH.keyboard, 149, 189, 4.7, 244, ''],
+  ['Headset Gamer HyperX Cloud Stinger Core 7.1', 'HyperX', 'perifericos', 'gaming', PH.speakers, 199, 249, 4.8, 187, ''],
+  ['Webcam Logitech C920 HD Pro 1080p', 'Logitech', 'perifericos', 'webcams', PH.webcam, 269, 319, 4.8, 402, 'NUEVO'],
+  ['Parlantes Logitech Z200 Stereo 2.0', 'Logitech', 'perifericos', 'audio', PH.speakers, 129, 0, 4.6, 133, ''],
   // Energía
-  ['UPS APC Back-UPS BX650LI 650VA 390W', 'APC', 'energia', 'ups', 'router', 219, 269, 4.7, 198, 'OFERTA'],
-  ['UPS Forza NT-1011 1000VA 500W', 'Forza', 'energia', 'ups', 'router', 289, 0, 4.6, 124, ''],
-  ['Estabilizador Forza FVR-1201 1200VA 8 Tomas', 'Forza', 'energia', 'ups', 'router', 99, 129, 4.5, 156, ''],
-  ['Fuente de Poder Corsair CV550 550W 80 Plus Bronze', 'Corsair', 'energia', 'fuentes', 'router', 219, 259, 4.8, 210, 'NUEVO'],
-  ['Supresor de Pico Forza FSP-1602 6 Tomas', 'Forza', 'energia', 'fuentes', 'router', 49, 0, 4.5, 98, ''],
-  ['Cámara IP Hikvision 2MP WiFi Interior', 'Hikvision', 'energia', 'vigilancia', 'router', 129, 159, 4.7, 176, ''],
-  ['DVR Hikvision 8 Canales 1080p Lite', 'Hikvision', 'energia', 'vigilancia', 'router', 349, 419, 4.7, 88, ''],
+  ['UPS APC Back-UPS BX650LI 650VA 390W', 'APC', 'energia', 'ups', PH.psu, 219, 269, 4.7, 198, 'OFERTA'],
+  ['UPS Forza NT-1011 1000VA 500W', 'Forza', 'energia', 'ups', PH.psuFan, 289, 0, 4.6, 124, ''],
+  ['Estabilizador Forza FVR-1201 1200VA 8 Tomas', 'Forza', 'energia', 'ups', PH.psu, 99, 129, 4.5, 156, ''],
+  ['Fuente de Poder Corsair CV550 550W 80 Plus Bronze', 'Corsair', 'energia', 'fuentes', PH.psuFan, 219, 259, 4.8, 210, 'NUEVO'],
+  ['Supresor de Pico Forza FSP-1602 6 Tomas', 'Forza', 'energia', 'fuentes', PH.psu, 49, 0, 4.5, 98, ''],
+  ['Cámara IP Hikvision 2MP WiFi Interior', 'Hikvision', 'energia', 'vigilancia', PH.cctv, 129, 159, 4.7, 176, ''],
+  ['DVR Hikvision 8 Canales 1080p Lite', 'Hikvision', 'energia', 'vigilancia', PH.cctv, 349, 419, 4.7, 88, ''],
   // Accesorios
-  ['Calculadora Casio HR-100RC con Impresión', 'Casio', 'accesorios', 'oficina', 'chair', 89, 0, 4.6, 142, ''],
-  ['Trituradora de Papel GBC ShredMaster 8 Hojas', 'GBC', 'accesorios', 'oficina', 'chair', 349, 419, 4.5, 54, ''],
-  ['Mochila para Laptop 15.6" Antirrobo con USB', 'Genérico', 'accesorios', 'accesorios-laptop', 'chair', 129, 169, 4.7, 231, 'OFERTA'],
-  ['Maletín para Laptop 15.6" Ejecutivo', 'Genérico', 'accesorios', 'accesorios-laptop', 'chair', 99, 0, 4.6, 118, ''],
-  ['Base Refrigerante para Laptop RGB 6 Ventiladores', 'Genérico', 'accesorios', 'accesorios-laptop', 'chair', 79, 99, 4.5, 176, ''],
-  ['Cable HDMI 2.0 4K 60Hz 2 Metros', 'Genérico', 'accesorios', 'cables', 'chair', 25, 35, 4.7, 540, ''],
-  ['Adaptador USB-C a HDMI 4K', 'Genérico', 'accesorios', 'cables', 'chair', 45, 0, 4.6, 288, ''],
-  ['Antivirus ESET NOD32 1 Año 1 PC', 'ESET', 'accesorios', 'software', 'chair', 79, 99, 4.8, 143, ''],
-  ['Licencia Microsoft Office 365 Personal 1 Año', 'Microsoft', 'accesorios', 'software', 'chair', 199, 249, 4.8, 205, 'NUEVO'],
+  ['Calculadora Casio HR-100RC con Impresión', 'Casio', 'accesorios', 'oficina', PH.calc, 89, 0, 4.6, 142, ''],
+  ['Trituradora de Papel GBC ShredMaster 8 Hojas', 'GBC', 'accesorios', 'oficina', PH.calc, 349, 419, 4.5, 54, ''],
+  ['Mochila para Laptop 15.6" Antirrobo con USB', 'Genérico', 'accesorios', 'accesorios-laptop', PH.backpack, 129, 169, 4.7, 231, 'OFERTA'],
+  ['Maletín para Laptop 15.6" Ejecutivo', 'Genérico', 'accesorios', 'accesorios-laptop', PH.backpack, 99, 0, 4.6, 118, ''],
+  ['Base Refrigerante para Laptop RGB 6 Ventiladores', 'Genérico', 'accesorios', 'accesorios-laptop', PH.backpack, 79, 99, 4.5, 176, ''],
+  ['Cable HDMI 2.0 4K 60Hz 2 Metros', 'Genérico', 'accesorios', 'cables', PH.hdmi, 25, 35, 4.7, 540, ''],
+  ['Adaptador USB-C a HDMI 4K', 'Genérico', 'accesorios', 'cables', PH.hdmi, 45, 0, 4.6, 288, ''],
+  ['Antivirus ESET NOD32 1 Año 1 PC', 'ESET', 'accesorios', 'software', PH.calc, 79, 99, 4.8, 143, ''],
+  ['Licencia Microsoft Office 365 Personal 1 Año', 'Microsoft', 'accesorios', 'software', PH.calc, 199, 249, 4.8, 205, 'NUEVO'],
 ]
 
 const extraProducts = extraRows.map((row, i) => mk(301 + i, row))
 
-export const products = [...seedProducts, ...extraProducts]
+// Los productos "seed" (ids 1-20) traían claves de ícono SVG; se sustituyen por
+// fotos reales (las mismas de /public/img) para que las páginas de categoría, la
+// búsqueda y los relacionados muestren fotografías en lugar de ilustraciones.
+const ICON_PHOTO = {
+  laptop: '/img/photo-1517336714731-489689fd1ca8.jpg',
+  printer: '/img/photo-1613395450289-e560907d9308.jpg',
+  toner: '/img/photo-1586953208448-b95a79798f07.jpg',
+  ink: '/img/photo-1558618666-fcd25c85cd64.jpg',
+  router: PH.router,
+  headset: PH.speakers,
+}
+const seedWithPhotos = seedProducts.map((p) => (ICON_PHOTO[p.image] ? { ...p, image: ICON_PHOTO[p.image] } : p))
+
+export const products = [...seedWithPhotos, ...extraProducts]
 
 // Metadatos por categoría para la página de listado (encabezado, subcategorías
 // con conteos, marcas con conteos y rango de precio del mockup).
