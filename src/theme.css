@@ -226,7 +226,7 @@
 @media (max-width: 760px) { .trust2-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; } }
 
 /* ---------- FOOTER 2 ---------- */
-.footer2 { background: #0a1f5c; color: #9fb0d0; margin-top: 0; font-size: 13px; }
+.footer2 { background: #1b3fc9; color: rgba(255, 255, 255, .82); margin-top: 0; font-size: 13px; }
 /* Banda de confianza plana, ancho completo, con divisores (parte superior del pie). */
 .foot-trust-band { border-bottom: 1px solid rgba(255,255,255,.1); }
 .foot-trust-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
@@ -238,7 +238,7 @@
 @media (max-width: 760px) { .foot-trust-cards { grid-template-columns: repeat(2, 1fr); } }
 .footer2-grid { display: grid; grid-template-columns: 1.7fr 1fr 1fr 1fr 1fr; gap: 28px; padding-bottom: 34px; }
 .footer2-news h4 { color: #fff; font-size: 15px; font-weight: 700; margin-bottom: 10px; }
-.footer2-news p { color: #7e8aa0; line-height: 1.6; margin-bottom: 16px; max-width: 280px; font-size: 12.5px; }
+.footer2-news p { color: rgba(255, 255, 255, .72); line-height: 1.6; margin-bottom: 16px; max-width: 280px; font-size: 12.5px; }
 .news2 { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; max-width: 320px; border-bottom: 1px solid rgba(255, 255, 255, .3); padding-bottom: 2px; }
 .news2 .news2-mail { color: rgba(255, 255, 255, .4); flex-shrink: 0; }
 .news2 input { flex: 1; height: auto; border-radius: 0; border: none; padding: 5px 0; font-size: 13px; color: #fff; background: transparent; outline: none; }
@@ -251,11 +251,11 @@
 .news2-check a:hover { color: #fff; }
 .footer2-col h4 { color: #fff; font-size: 13.5px; font-weight: 700; margin-bottom: 14px; }
 .footer2-col ul li { margin-bottom: 10px; }
-.footer2-col ul li a { color: #8590a4; font-size: 12.5px; }
+.footer2-col ul li a { color: rgba(255, 255, 255, .8); font-size: 12.5px; }
 .footer2-col ul li a:hover { color: #fff; }
 .footer2-bottom { border-top: 1px solid rgba(255,255,255,.08); padding: 16px 0; }
 .footer2-bottom .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.footer2-bottom .copy { color: #8b94a5; font-size: 12.5px; }
+.footer2-bottom .copy { color: rgba(255, 255, 255, .75); font-size: 12.5px; }
 .foot-pay { display: flex; align-items: center; gap: 8px; }
 .foot-pay .pm { width: 42px; height: 26px; }
 @media (max-width: 880px) { .footer2-grid { grid-template-columns: 1fr 1fr; } }

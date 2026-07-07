@@ -67,6 +67,8 @@ export function applyOverride(staticP, ov) {
   if (ov.category != null && ov.category !== '') out.category = ov.category
   if (ov.subcategory != null) out.subcategory = ov.subcategory
   if (Array.isArray(ov.attributes)) out.attributes = ov.attributes
+  if (Array.isArray(ov.gallery)) out.gallery = ov.gallery
+  if (Array.isArray(ov.images)) out.images = ov.images
   return out
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ProductImage } from '../components/imageMap.jsx'
 import { Truck, Zap, MapPin, Shield, Heart, Cart, Star, Plus, ChevronRight } from '../components/Icons.jsx'
@@ -20,16 +20,34 @@ function normalize(base) {
   if (!base) return null
   const cat = getCategory(base.category)
   const isCatalog = base.specs && typeof base.specs === 'object' && !Array.isArray(base.specs)
-  const specsRows = isCatalog
+  // Atributos administrables (definidos en el panel) — se muestran como parte de
+  // las especificaciones del producto.
+  const attrRows = (Array.isArray(base.attributes) ? base.attributes : [])
+    .filter((a) => a && a.name && a.value != null && String(a.value).trim() !== '')
+    .map((a) => ({ label: String(a.name).trim(), value: String(a.value).trim() }))
+  const baseRows = isCatalog
     ? Object.entries(base.specs).map(([label, value]) => ({ label, value }))
     : [
       { label: 'Marca', value: base.brand },
-      { label: 'Modelo', value: base.sku || `${base.brand}-${base.id}` },
-      { label: 'Número de Parte', value: `${String(base.brand || '').toUpperCase()}${String(base.id).padStart(6, '0')}` },
+      { label: 'Modelo', value: base.model || base.sku || `${base.brand}-${base.id}` },
+      { label: 'SKU', value: base.sku || `${String(base.brand || '').toUpperCase()}-${base.id}` },
       { label: 'Garantía', value: '12 meses oficial' },
       { label: 'País', value: 'Perú' },
       { label: 'Condición', value: 'Nuevo' },
     ]
+  // Une atributos + specs sin duplicar etiquetas (los atributos tienen prioridad).
+  const seen = new Set()
+  const specsRows = [...attrRows, ...baseRows].filter((r) => {
+    const k = r.label.toLowerCase()
+    if (seen.has(k) || r.value == null || r.value === '') return false
+    seen.add(k); return true
+  })
+  // Galería de imágenes: imagen principal + galería administrable (campo `gallery`
+  // del panel) o `images`; se eliminan duplicados y vacíos.
+  const gal = Array.isArray(base.images) && base.images.length
+    ? base.images
+    : [base.image, ...(Array.isArray(base.gallery) ? base.gallery : [])]
+  const images = [...new Set(gal.filter(Boolean))]
   let related = storeByCategory(base.category).filter((p) => p.slug !== base.slug).slice(0, 4)
   if (!related.length && Array.isArray(base.related)) {
     related = base.related.map((id) => products.find((p) => p.id === id)).filter(Boolean)
@@ -46,7 +64,7 @@ function normalize(base) {
     oldPrice: base.oldPrice ? Number(base.oldPrice) : null,
     rating: Number(base.rating) || 5,
     reviews: Number(base.reviews) || 0,
-    image: base.image, tint: base.tint, label: base.label, seed: base.id,
+    image: base.image, images, tint: base.tint, label: base.label, seed: base.id,
     specsRows,
     related,
   }
@@ -68,9 +86,13 @@ export default function Product() {
   const [tab, setTab] = useState('desc')
   const [wished, setWished] = useState(false)
   const [added, setAdded] = useState(false)
+  const [imgIdx, setImgIdx] = useState(0)
 
   const raw = findStoreProduct(slug) || getProduct(slug) || extras.find((p) => p.slug === slug)
   const p = normalize(raw ? applyOverride(raw, overrides[raw.id]) : null)
+
+  // Reinicia la imagen activa al cambiar de producto.
+  useEffect(() => { setImgIdx(0) }, [slug])
 
   useSeo(p
     ? {
@@ -100,18 +122,18 @@ export default function Product() {
 
         {/* Main grid */}
         <div className="pdp-grid">
-          {/* Thumbs */}
+          {/* Thumbs (galería: una miniatura por imagen del producto) */}
           <div className="pdp-thumbs">
-            {[0, 1, 2, 3].map((i) => (
-              <button key={i} className={`pdp-thumb ${i === 0 ? 'active' : ''}`}>
-                <ProductImage image={p.image} tint={p.tint} label={p.label} seed={p.seed} brand={p.brand} style={COVER} />
+            {p.images.map((img, i) => (
+              <button key={i} type="button" className={`pdp-thumb ${i === imgIdx ? 'active' : ''}`} onClick={() => setImgIdx(i)} aria-label={`Ver imagen ${i + 1}`}>
+                <ProductImage image={img} tint={p.tint} label={p.label} seed={p.seed} brand={p.brand} style={COVER} />
               </button>
             ))}
           </div>
 
           {/* Main image */}
           <div className="pdp-stage">
-            <ProductImage image={p.image} tint={p.tint} label={p.label} seed={p.seed} brand={p.brand} style={COVER} />
+            <ProductImage image={p.images[imgIdx] || p.image} tint={p.tint} label={p.label} seed={p.seed} brand={p.brand} style={COVER} />
             {discount && <span className="pdp-disc">-{discount}%</span>}
             <button className={`pdp-wish ${wished ? 'on' : ''}`} onClick={() => setWished((w) => !w)}><Heart size={12} /> Lista de deseos</button>
           </div>
