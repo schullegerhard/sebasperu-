@@ -9,15 +9,20 @@ const img = (id) => `/img/${id}.jpg`
 
 export const homeBrands = ['HP', 'Epson', 'Brother', 'Canon', 'Lenovo', 'ASUS', 'Dell', 'Logitech', 'Kingston']
 
+// Franja de categorías de la Home — refleja las categorías reales de la barra
+// de navegación (y del admin): Computación, Impresión, Tóner, Tintas, Redes,
+// Almacenamiento, Periféricos, Energía, Accesorios.
 export const homeCategories = [
   { name: 'Todo', image: img('photo-1496181133206-80ce9b88a853'), to: '/productos' },
-  { name: 'Tintas', image: img('photo-1706895040634-62055892cbbb'), to: '/categoria/tintas' },
-  { name: 'Tóner', image: img('photo-1612815154858-60aa4c59eaa6'), to: '/categoria/toner' },
-  { name: 'Laptops', image: img('photo-1525547719571-a2d4ac8945e2'), to: '/categoria/laptops-pc' },
-  { name: 'Tintas Epson', image: img('photo-1558618666-fcd25c85cd64'), to: '/buscar?q=epson' },
-  { name: 'Tóner HP', image: img('photo-1586953208448-b95a79798f07'), to: '/buscar?q=t%C3%B3ner%20hp' },
-  { name: 'Laptops Dell', image: img('photo-1593642632559-0c6d3fc62b89'), to: '/categoria/laptops-pc' },
-  { name: 'Tintas Canon', image: img('photo-1551971868-1bc03829fd98'), to: '/buscar?q=canon' },
+  { name: 'Computación', image: img('photo-1517336714731-489689fd1ca8'), to: '/categoria/laptops-pc' },
+  { name: 'Impresión', image: img('photo-1613395450289-e560907d9308'), to: '/categoria/impresoras' },
+  { name: 'Tóner', image: img('photo-1586953208448-b95a79798f07'), to: '/categoria/toner' },
+  { name: 'Tintas', image: img('photo-1558618666-fcd25c85cd64'), to: '/categoria/tintas' },
+  { name: 'Redes', image: img('photo-1606904825846-647eb07f5be2'), to: '/categoria/redes' },
+  { name: 'Almacenamiento', image: img('photo-1628557118391-56cd62c9f2cb'), to: '/categoria/almacenamiento' },
+  { name: 'Periféricos', image: img('photo-1615663245857-ac93bb7c39e7'), to: '/categoria/perifericos' },
+  { name: 'Energía', image: img('photo-1716062890647-60feae0609d0'), to: '/categoria/energia' },
+  { name: 'Accesorios', image: img('photo-1553062407-98eeb64c6a62'), to: '/categoria/accesorios' },
 ]
 
 // Ofertas Flash (image con badge + barra de stock).

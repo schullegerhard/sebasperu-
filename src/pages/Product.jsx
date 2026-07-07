@@ -122,18 +122,20 @@ export default function Product() {
 
         {/* Main grid */}
         <div className="pdp-grid">
-          {/* Thumbs (galería: una miniatura por imagen del producto) */}
+          {/* Thumbs (galería: una miniatura por imagen del producto). NO se pasa
+              `seed`: cada miniatura es una imagen ya resuelta (data URL / ruta);
+              con `seed` el override por id mostraría la principal en todas. */}
           <div className="pdp-thumbs">
             {p.images.map((img, i) => (
               <button key={i} type="button" className={`pdp-thumb ${i === imgIdx ? 'active' : ''}`} onClick={() => setImgIdx(i)} aria-label={`Ver imagen ${i + 1}`}>
-                <ProductImage image={img} tint={p.tint} label={p.label} seed={p.seed} brand={p.brand} style={COVER} />
+                <ProductImage image={img} tint={p.tint} label={p.label} brand={p.brand} style={COVER} />
               </button>
             ))}
           </div>
 
-          {/* Main image */}
+          {/* Main image (imagen activa de la galería; sin `seed` por lo mismo) */}
           <div className="pdp-stage">
-            <ProductImage image={p.images[imgIdx] || p.image} tint={p.tint} label={p.label} seed={p.seed} brand={p.brand} style={COVER} />
+            <ProductImage image={p.images[imgIdx] || p.image} tint={p.tint} label={p.label} brand={p.brand} style={COVER} />
             {discount && <span className="pdp-disc">-{discount}%</span>}
             <button className={`pdp-wish ${wished ? 'on' : ''}`} onClick={() => setWished((w) => !w)}><Heart size={12} /> Lista de deseos</button>
           </div>

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import {
   Truck, MapPin, Search, Cart, ChevronDown,
-  ShieldCheck, Phone, Tag, Mail, Zap,
+  ShieldCheck, Phone, Tag, Mail, Zap, Menu, X,
 } from './Icons.jsx'
 import { ProductImage } from './imageMap.jsx'
 import { products, peso } from '../data/catalog.js'
@@ -97,11 +97,12 @@ function PredictiveSearch({ variant = 'inner' }) {
   )
 }
 
-const MainHeader = ({ variant = 'inner' }) => {
+const MainHeader = ({ variant = 'inner', onMenu }) => {
   const { cartCount, cartTotal, openCart } = useStore()
   return (
     <header className="header">
       <div className="container">
+        <button type="button" className="hdr-burger" onClick={onMenu} aria-label="Abrir menú"><Menu size={22} /></button>
         <Logo variant={variant} />
         <PredictiveSearch variant={variant} />
         <div className="header-actions">
@@ -192,12 +193,61 @@ const Nav = () => (
   </nav>
 )
 
+// Menú lateral para móvil: categorías como acordeón (rubro + subcategorías).
+function MobileMenu({ open, onClose }) {
+  const [expanded, setExpanded] = useState(null)
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+  if (!open) return null
+  return (
+    <div className="mnav-overlay" onClick={onClose}>
+      <div className="mnav" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Menú de categorías">
+        <div className="mnav-head">
+          <span>Categorías</span>
+          <button onClick={onClose} aria-label="Cerrar menú"><X size={20} /></button>
+        </div>
+        <div className="mnav-body">
+          <Link to="/productos" className="mnav-top" onClick={onClose}>Todos los productos</Link>
+          {MEGA_MENU.map((item) => {
+            const isOpen = expanded === item.label
+            return (
+              <div className="mnav-group" key={item.label}>
+                <div className="mnav-row">
+                  <Link to={item.to} className="mnav-cat" onClick={onClose}>{item.label}</Link>
+                  <button className="mnav-exp" onClick={() => setExpanded(isOpen ? null : item.label)} aria-label={`Ver subcategorías de ${item.label}`}>
+                    <ChevronDown size={16} className={isOpen ? 'up' : ''} />
+                  </button>
+                </div>
+                {isOpen && (
+                  <div className="mnav-subs">
+                    {item.cols.map((col) => (
+                      <div className="mnav-subcol" key={col.title}>
+                        <p className="mnav-subtitle">{col.title}</p>
+                        {col.items.map((it) => <Link key={it} to={item.to} className="mnav-sub" onClick={onClose}>{it}</Link>)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          <Link to="/ofertas" className="mnav-top ofertas" onClick={onClose}><Tag size={15} /> OFERTAS</Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Header({ variant = 'inner' }) {
+  const [menuOpen, setMenuOpen] = useState(false)
   return (
     <div className="site-header">
       <TopBar />
-      <MainHeader variant={variant} />
+      <MainHeader variant={variant} onMenu={() => setMenuOpen(true)} />
       <Nav />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   )
 }
