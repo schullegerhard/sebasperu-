@@ -43,11 +43,14 @@ export default function Categories() {
   const countIn = (slug) => products.filter((p) => p.category === slug).length
   const nameOf = (slug) => cats.find((c) => c.slug === slug)?.name || '—'
 
-  // Orden jerárquico: principales por 'order', luego sus hijas.
-  const roots = cats.filter((c) => !c.parent).sort((a, b) => (a.order || 0) - (b.order || 0))
+  // Orden jerárquico recursivo (soporta niveles: rubro → grupo → ítem).
+  const byOrder = (a, b) => (a.order || 0) - (b.order || 0) || (a.name || '').localeCompare(b.name || '')
+  const childrenOf = (slug) => cats.filter((x) => x.parent === slug).sort(byOrder)
   const rows = []
-  roots.forEach((r) => { rows.push({ c: r, depth: 0 }); cats.filter((x) => x.parent === r.slug).forEach((ch) => rows.push({ c: ch, depth: 1 })) })
-  cats.filter((c) => c.parent && !cats.some((x) => x.slug === c.parent)).forEach((c) => rows.push({ c, depth: 0 }))
+  const walk = (c, depth) => { rows.push({ c, depth }); childrenOf(c.slug).forEach((ch) => walk(ch, depth + 1)) }
+  cats.filter((c) => !c.parent).sort(byOrder).forEach((r) => walk(r, 0))
+  // Huérfanos (parent inexistente) se muestran como raíces al final.
+  cats.filter((c) => c.parent && !cats.some((x) => x.slug === c.parent)).sort(byOrder).forEach((c) => walk(c, 0))
 
   const openNew = () => { setModal(emptyCat()); setSlugEdited(false); setTab('General') }
   const openEdit = (c) => { setModal({ ...emptyCat(), ...c, seo: { ...emptyCat().seo, ...(c.seo || {}) } }); setSlugEdited(true); setTab('General') }

@@ -75,7 +75,9 @@ export default function Catalog({ mode = 'category' }) {
 
   const catScope = useMemo(() => descendantSlugs(slug, apiCats), [slug, apiCats])
   const meta = mode === 'category' ? getCategoryMeta(slug) : null
-  const catObj = mode === 'category' ? getCategory(slug) : null
+  // Nombre de la categoría: catálogo estático o, para las subcategorías nuevas,
+  // la lista de categorías de la API (BD).
+  const catObj = mode === 'category' ? (getCategory(slug) || apiCats.find((c) => c.slug === slug)) : null
 
   // Origen de productos: para las categorías del diseño usa los productos del
   // storefront (con fotos, conectados); si no, cae al catálogo + productos de la API.

@@ -10,6 +10,8 @@ import { useSeo, productJsonLd } from '../lib/seo.js'
 import { NotFound } from './Misc.jsx'
 
 const COVER = { objectFit: 'cover', width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none' }
+// La galería de la ficha muestra la imagen COMPLETA (sin recortar).
+const CONTAIN = { objectFit: 'contain', width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none' }
 
 const Stars = ({ value = 5 }) => (
   <span className="pdp-stars">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={13} style={{ opacity: i < Math.round(value) ? 1 : .3 }} />)}</span>
@@ -64,6 +66,7 @@ function normalize(base) {
     oldPrice: base.oldPrice ? Number(base.oldPrice) : null,
     rating: Number(base.rating) || 5,
     reviews: Number(base.reviews) || 0,
+    shortDesc: base.shortDesc || base.subtitle || base.blurb || '',
     image: base.image, images, tint: base.tint, label: base.label, seed: base.id,
     specsRows,
     related,
@@ -105,7 +108,10 @@ export default function Product() {
 
   if (!p) return <NotFound />
 
-  const discount = p.oldPrice ? Math.round((1 - p.price / p.oldPrice) * 100) : null
+  // Solo hay descuento si el precio anterior es MAYOR que el actual (evita el
+  // "0" fantasma y el precio tachado duplicado cuando oldPrice === price).
+  const hasOff = p.oldPrice && Number(p.oldPrice) > Number(p.price)
+  const discount = hasOff ? Math.round((1 - p.price / p.oldPrice) * 100) : 0
   const cuota = Math.round(p.price / 6)
   const doAdd = () => { for (let i = 0; i < qty; i++) addToCart(raw); setAdded(true); setTimeout(() => setAdded(false), 2000) }
   const buyNow = () => { addToCart(raw, qty); navigate('/checkout') }
@@ -128,15 +134,15 @@ export default function Product() {
           <div className="pdp-thumbs">
             {p.images.map((img, i) => (
               <button key={i} type="button" className={`pdp-thumb ${i === imgIdx ? 'active' : ''}`} onClick={() => setImgIdx(i)} aria-label={`Ver imagen ${i + 1}`}>
-                <ProductImage image={img} tint={p.tint} label={p.label} brand={p.brand} style={COVER} />
+                <ProductImage image={img} tint={p.tint} label={p.label} brand={p.brand} style={CONTAIN} />
               </button>
             ))}
           </div>
 
           {/* Main image (imagen activa de la galería; sin `seed` por lo mismo) */}
           <div className="pdp-stage">
-            <ProductImage image={p.images[imgIdx] || p.image} tint={p.tint} label={p.label} brand={p.brand} style={COVER} />
-            {discount && <span className="pdp-disc">-{discount}%</span>}
+            <ProductImage image={p.images[imgIdx] || p.image} tint={p.tint} label={p.label} brand={p.brand} style={CONTAIN} />
+            {hasOff && <span className="pdp-disc">-{discount}%</span>}
             <button className={`pdp-wish ${wished ? 'on' : ''}`} onClick={() => setWished((w) => !w)}><Heart size={12} /> Lista de deseos</button>
           </div>
 
@@ -148,13 +154,14 @@ export default function Product() {
             </div>
             <div className="pdp-rating"><Stars value={p.rating} /> <span>({p.reviews.toLocaleString('es-PE')} valoraciones de clientes)</span></div>
             <h1 className="pdp-title">{p.name}</h1>
+            {p.shortDesc && <p className="pdp-shortdesc">{p.shortDesc}</p>}
             <div className="pdp-price">
               <div className="pdp-price-row">
                 <span className="now">{peso(p.price).replace('.00', '')}</span>
-                {p.oldPrice && <span className="old">{peso(p.oldPrice).replace('.00', '')}</span>}
-                {discount && <span className="disc">-{discount}%</span>}
+                {hasOff && <span className="old">{peso(p.oldPrice).replace('.00', '')}</span>}
+                {hasOff && <span className="disc">-{discount}%</span>}
               </div>
-              {discount && <p className="pdp-save">Ahorras {peso(p.oldPrice - p.price).replace('.00', '')}</p>}
+              {hasOff && <p className="pdp-save">Ahorras {peso(p.oldPrice - p.price).replace('.00', '')}</p>}
               <p className="pdp-cuota-txt">6 cuotas de <b>{peso(cuota).replace('.00', '')}</b> sin intereses</p>
             </div>
             <div className="pdp-specs">
@@ -263,12 +270,12 @@ export default function Product() {
             <div className="pdp-related-grid">
               {p.related.map((r) => {
                 const rslug = r.slug || productSlug(r.name)
-                const d = r.oldPrice ? Math.round((1 - r.price / r.oldPrice) * 100) : null
+                const d = r.oldPrice && Number(r.oldPrice) > Number(r.price) ? Math.round((1 - r.price / r.oldPrice) * 100) : 0
                 return (
                   <div className="pdp-rel-card" key={r.id}>
                     <Link to={`/producto/${rslug}`} className="pdp-rel-thumb">
                       <ProductImage image={r.image} tint={r.tint} label={r.label} seed={r.id} brand={r.brand} style={COVER} />
-                      {d && <span className="pdp-rel-disc">-{d}%</span>}
+                      {d > 0 && <span className="pdp-rel-disc">-{d}%</span>}
                     </Link>
                     <div className="pdp-rel-body">
                       <span className="pdp-rel-brand">{r.brand}</span>

@@ -6,6 +6,7 @@ import {
 } from './Icons.jsx'
 import { ProductImage } from './imageMap.jsx'
 import { products, peso } from '../data/catalog.js'
+import { MENU_TREE } from '../data/menu.js'
 import { useProductOverrides, useExtraProducts, applyOverride } from '../context/ProductOverrides.jsx'
 import { useStore } from '../context/StoreContext.jsx'
 import { track } from '../lib/analytics.js'
@@ -124,56 +125,22 @@ const MainHeader = ({ variant = 'inner', onMenu }) => {
   )
 }
 
-// Mega-menú del nav (mismos rubros y columnas que el diseño Figma). Cada rubro
-// enlaza a su página de categoría real (/categoria/{slug}); los ítems de columna
-// enlazan a una búsqueda que devuelve los productos correspondientes.
-const MEGA_MENU = [
-  { label: 'Computación', to: '/categoria/laptops-pc', cols: [
-    { title: 'Equipos', items: ['Laptops', 'Mini PC', 'Computadoras', 'All In One', 'Tablets', 'Servidores'] },
-    { title: 'Visualización', items: ['Monitores', 'Componentes PC'] },
-  ] },
-  { label: 'Impresión', to: '/categoria/impresoras', cols: [
-    { title: 'Impresoras', items: ['Impresoras Inkjet', 'Impresoras Láser', 'Impresoras Multifunción', 'Impresoras Matriciales', 'Impresoras Térmicas', 'Impresoras de Etiquetas', 'Escáneres'] },
-    { title: 'Tóner', items: ['Tóner HP', 'Tóner Brother', 'Tóner Canon', 'Tóner Samsung', 'Tóner Kyocera', 'Tóner Ricoh', 'Tóner Xerox', 'Tóner Lexmark', 'Tóner Konica Minolta'] },
-    { title: 'Tintas & Cintas', items: ['Tintas Epson', 'Tintas Canon', 'Tintas HP', 'Cintas Epson', 'Cintas Brother', 'Cintas de Etiquetas'] },
-    { title: 'Repuestos', items: ['Unidades de Imagen', 'Fusores', 'Rodillos', 'Repuestos para Impresoras'] },
-  ] },
-  { label: 'Redes', to: '/categoria/redes', cols: [
-    { title: 'Conectividad', items: ['Routers', 'Access Point', 'Switches', 'Módems', 'Tarjetas de Red', 'Adaptadores WiFi', 'Antenas'] },
-    { title: 'Cableado', items: ['Cables de Red', 'Patch Cord', 'Rack', 'Organizadores'] },
-  ] },
-  { label: 'Almacenamiento', to: '/categoria/almacenamiento', cols: [
-    { title: 'Almacenamiento', items: ['SSD', 'Disco Duro Interno', 'Disco Duro Externo', 'Memorias USB', 'Tarjetas MicroSD', 'NAS'] },
-    { title: 'Memorias', items: ['Memoria RAM DDR4', 'Memoria RAM DDR5', 'Memorias Laptop'] },
-  ] },
-  { label: 'Periféricos', to: '/categoria/perifericos', cols: [
-    { title: 'Periféricos', items: ['Mouse', 'Teclados', 'Webcams', 'Lectores', 'Presentadores', 'Hub USB', 'Docking Station'] },
-    { title: 'Gaming', items: ['Mouse Gamer', 'Teclado Gamer', 'Headset Gamer', 'Mouse Pad', 'Sillas Gamer', 'Mandos'] },
-    { title: 'Audio', items: ['Audífonos', 'Parlantes', 'Micrófonos'] },
-  ] },
-  { label: 'Energía', to: '/categoria/energia', cols: [
-    { title: 'Energía', items: ['UPS', 'Estabilizadores', 'Supresores de Pico', 'Cargadores', 'Adaptadores', 'Fuentes de Poder'] },
-    { title: 'Vigilancia', items: ['Cámaras IP', 'Cámaras WiFi', 'DVR', 'NVR', 'Accesorios CCTV'] },
-  ] },
-  { label: 'Accesorios', to: '/categoria/accesorios', cols: [
-    { title: 'Oficina', items: ['Calculadoras', 'Trituradoras', 'Plastificadoras', 'Encuadernadoras', 'Guillotinas'] },
-    { title: 'Accesorios Laptop', items: ['Mochilas', 'Maletines', 'Bases para Laptop', 'Soportes para Monitor'] },
-    { title: 'Cables & Adaptadores', items: ['Cables HDMI', 'Cables DisplayPort', 'Adaptadores', 'Conversores', 'Cargadores'] },
-    { title: 'Software', items: ['Antivirus', 'Licencias Microsoft', 'Software'] },
-  ] },
-]
+// El mega-menú se deriva del árbol de categorías (src/data/menu.js). Cada ítem
+// de columna enlaza a la página de su subcategoría real (/categoria/{slug}); los
+// títulos de columna que son categorías propias (Tóner/Tintas) también enlazan.
+const MEGA_MENU = MENU_TREE
 
 function NavItem({ item }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="nav2-item" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <Link to={item.to} className="nav2-link">{item.label} <ChevronDown size={13} className={open ? 'up' : ''} /></Link>
+      <Link to={item.to} className="nav2-link">{item.name} <ChevronDown size={13} className={open ? 'up' : ''} /></Link>
       {open && (
         <div className="nav2-mega" style={{ minWidth: 180 * item.cols.length }}>
           {item.cols.map((col) => (
             <div className="nav2-mega-col" key={col.title}>
-              <p className="nav2-mega-title">{col.title}</p>
-              <ul>{col.items.map((it) => <li key={it}><Link to={item.to}>{it}</Link></li>)}</ul>
+              <p className="nav2-mega-title">{col.groupSlug ? <Link to={`/categoria/${col.groupSlug}`}>{col.title}</Link> : col.title}</p>
+              <ul>{col.items.map(([slug, name]) => <li key={slug}><Link to={`/categoria/${slug}`}>{name}</Link></li>)}</ul>
             </div>
           ))}
         </div>
@@ -186,7 +153,7 @@ const Nav = () => (
   <nav className="nav2">
     <div className="container">
       <div className="nav2-links">
-        {MEGA_MENU.map((item) => <NavItem key={item.label} item={item} />)}
+        {MEGA_MENU.map((item) => <NavItem key={item.slug} item={item} />)}
       </div>
       <Link to="/ofertas" className="nav2-ofertas"><Tag size={15} /> OFERTAS</Link>
     </div>
@@ -211,12 +178,12 @@ function MobileMenu({ open, onClose }) {
         <div className="mnav-body">
           <Link to="/productos" className="mnav-top" onClick={onClose}>Todos los productos</Link>
           {MEGA_MENU.map((item) => {
-            const isOpen = expanded === item.label
+            const isOpen = expanded === item.slug
             return (
-              <div className="mnav-group" key={item.label}>
+              <div className="mnav-group" key={item.slug}>
                 <div className="mnav-row">
-                  <Link to={item.to} className="mnav-cat" onClick={onClose}>{item.label}</Link>
-                  <button className="mnav-exp" onClick={() => setExpanded(isOpen ? null : item.label)} aria-label={`Ver subcategorías de ${item.label}`}>
+                  <Link to={item.to} className="mnav-cat" onClick={onClose}>{item.name}</Link>
+                  <button className="mnav-exp" onClick={() => setExpanded(isOpen ? null : item.slug)} aria-label={`Ver subcategorías de ${item.name}`}>
                     <ChevronDown size={16} className={isOpen ? 'up' : ''} />
                   </button>
                 </div>
@@ -224,8 +191,8 @@ function MobileMenu({ open, onClose }) {
                   <div className="mnav-subs">
                     {item.cols.map((col) => (
                       <div className="mnav-subcol" key={col.title}>
-                        <p className="mnav-subtitle">{col.title}</p>
-                        {col.items.map((it) => <Link key={it} to={item.to} className="mnav-sub" onClick={onClose}>{it}</Link>)}
+                        <p className="mnav-subtitle">{col.groupSlug ? <Link to={`/categoria/${col.groupSlug}`} onClick={onClose}>{col.title}</Link> : col.title}</p>
+                        {col.items.map(([slug, name]) => <Link key={slug} to={`/categoria/${slug}`} className="mnav-sub" onClick={onClose}>{name}</Link>)}
                       </div>
                     ))}
                   </div>
