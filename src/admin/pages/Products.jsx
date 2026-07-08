@@ -52,7 +52,12 @@ export default function Products() {
     const cur = m.categories || []
     return { ...m, categories: cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug] }
   })
-  const subOptions = (catSlug) => cats.find((c) => c.slug === catSlug)?.subcategories || []
+  // Subcategorías = categorías hijas reales (parent === categoría) para poder
+  // enlazar el producto a las subcategorías del menú; si no hay, usa el array legacy.
+  const subOptions = (catSlug) => {
+    const kids = cats.filter((c) => c.parent === catSlug).map((c) => ({ slug: c.slug, name: c.name }))
+    return kids.length ? kids : (cats.find((c) => c.slug === catSlug)?.subcategories || [])
+  }
   const otherProducts = rows.filter((p) => !modal?.id || p.id !== modal.id).map((p) => ({ id: p.id, name: p.name }))
 
   const save = async (e) => {

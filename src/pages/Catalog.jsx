@@ -96,21 +96,33 @@ export default function Catalog({ mode = 'category' }) {
         return p.name.toLowerCase().includes(t) || (p.brand || '').toLowerCase().includes(t) || (p.sku || '').toLowerCase().includes(t)
       })
     }
-    // Un producto pertenece a la categoría por su categoría principal o por
-    // cualquiera de sus categorías adicionales (multi-categoría).
-    const inCat = (p) => catScope.has(p.category) || (Array.isArray(p.categories) && p.categories.some((c) => catScope.has(c)))
-    const inExtraCat = (p) => Array.isArray(p.categories) && p.categories.some((c) => catScope.has(c))
-    const store = storeByCategory(slug)
-    if (!store.length) return catalogAll.filter(inCat)
-    // Categoría "core" (con productos del storefront): conserva esos y añade
-    //   • productos del panel/API (creados/editados en el admin) de esta categoría
-    //   • productos estáticos asignados como categoría ADICIONAL
-    // sin duplicar (los estáticos solo por multi-cat para no repetir el catálogo).
-    const seen = new Set(store.map((p) => p.slug || p.id))
-    const fromAdmin = extras.filter((p) => inCat(p) && !seen.has(p.slug || p.id))
-    const fromStaticMulti = staticAll.filter((p) => inExtraCat(p) && !seen.has(p.slug || p.id))
-    return [...store, ...fromAdmin, ...fromStaticMulti]
-  }, [mode, slug, query, overrides, extras, catScope])
+    // Productos de una categoría y sus descendientes. Un producto pertenece por
+    // su categoría principal, cualquiera de sus categorías adicionales, o su
+    // SUBcategoría (así los ítems del menú listan sus productos).
+    const productsFor = (rootSlug) => {
+      const scope = descendantSlugs(rootSlug, apiCats)
+      const inCat = (p) => scope.has(p.category) || (Array.isArray(p.categories) && p.categories.some((c) => scope.has(c))) || (p.subcategory && scope.has(p.subcategory))
+      const inExtra = (p) => (Array.isArray(p.categories) && p.categories.some((c) => scope.has(c))) || (p.subcategory && scope.has(p.subcategory))
+      const store = storeByCategory(rootSlug)
+      if (!store.length) return catalogAll.filter(inCat)
+      const seen = new Set(store.map((p) => p.slug || p.id))
+      return [
+        ...store,
+        ...extras.filter((p) => inCat(p) && !seen.has(p.slug || p.id)),
+        ...staticAll.filter((p) => inExtra(p) && !seen.has(p.slug || p.id)),
+      ]
+    }
+    let list = productsFor(slug)
+    // Si una subcategoría no tiene productos propios, muestra los de su categoría
+    // superior (para que ningún ítem del menú quede vacío mientras se recategoriza).
+    let up = apiCats.find((c) => c.slug === slug)?.parent
+    let guard = 0
+    while (up && !list.length && guard++ < 8) {
+      list = productsFor(up)
+      up = apiCats.find((c) => c.slug === up)?.parent
+    }
+    return list
+  }, [mode, slug, query, overrides, extras, apiCats])
 
   const brands = useMemo(() => [...new Set(base.map((p) => p.brand).filter(Boolean))], [base])
   const prices = base.map((p) => Number(p.price) || 0)
