@@ -444,8 +444,8 @@ export const products = [...seedWithPhotos, ...extraProducts]
 // con conteos, marcas con conteos y rango de precio del mockup).
 export const categoryMeta = {
   'laptops-pc': {
-    title: 'Laptops',
-    subtitle: 'Encuentra las mejores laptops para trabajo, estudio y entretenimiento.',
+    title: 'Computación',
+    subtitle: 'Laptops, computadoras, monitores y componentes para trabajo, estudio y gaming.',
     crumb: [{ label: 'Laptops & PC', to: '/categoria/laptops-pc' }, { label: 'Laptops' }],
     subcats: [
       { name: 'Laptops', slug: '', count: 96 },
