@@ -834,6 +834,14 @@
 .pdp-tab-head button.on::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--blue); }
 .pdp-tab-body { padding: 24px; }
 .pdp-desc { max-width: 800px; font-size: 14px; color: #5a7090; line-height: 1.7; }
+.pdp-faq { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 18px; }
+.pdp-faq h3 { font-size: 16px; font-weight: 800; color: #0f1c2e; margin-bottom: 12px; }
+.pdp-faq-item { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; background: #fff; }
+.pdp-faq-item summary { cursor: pointer; font-weight: 700; color: #1f2937; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.pdp-faq-item summary::after { content: '+'; font-size: 18px; color: var(--blue); font-weight: 700; }
+.pdp-faq-item[open] summary::after { content: '−'; }
+.pdp-faq-item summary::-webkit-details-marker { display: none; }
+.pdp-faq-item p { margin-top: 10px; color: #5a7090; font-size: 13.5px; line-height: 1.6; }
 .pdp-desc .lead { font-weight: 800; color: #0f1c2e; font-size: 16px; margin-bottom: 12px; }
 .pdp-desc p { margin-bottom: 12px; }
 .pdp-spec-table { width: 100%; max-width: 720px; border-collapse: collapse; font-size: 14px; }

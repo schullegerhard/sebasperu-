@@ -67,6 +67,7 @@ function normalize(base) {
     rating: Number(base.rating) || 5,
     reviews: Number(base.reviews) || 0,
     shortDesc: base.shortDesc || base.subtitle || base.blurb || '',
+    faq: (Array.isArray(base.faq) ? base.faq : []).filter((f) => f && f.q),
     image: base.image, images, tint: base.tint, label: base.label, seed: base.id,
     specsRows,
     related,
@@ -164,11 +165,7 @@ export default function Product() {
               {hasOff && <p className="pdp-save">Ahorras {peso(p.oldPrice - p.price).replace('.00', '')}</p>}
               <p className="pdp-cuota-txt">6 cuotas de <b>{peso(cuota).replace('.00', '')}</b> sin intereses</p>
             </div>
-            <div className="pdp-specs">
-              {p.specsRows.map((s) => (
-                <div className="pdp-spec-row" key={s.label}><span className="k">{s.label}:</span><span className="v">{s.value}</span></div>
-              ))}
-            </div>
+            {/* Las especificaciones se muestran solo en la pestaña "Especificaciones" (abajo). */}
             <div className="pdp-sold">🔥 <span>85 vendidos en las últimas 48 horas</span></div>
             <div className="pdp-cuotas">
               <div><small>Paga en 6 cuotas sin intereses</small><b>{peso(cuota).replace('.00', '')} / cuota</b></div>
@@ -233,6 +230,17 @@ export default function Product() {
                 <p className="lead">{p.name}</p>
                 <p>Producto original con garantía oficial de fábrica. Ideal para uso profesional y personal. Cuenta con las últimas tecnologías para garantizar el mejor rendimiento y durabilidad.</p>
                 <p>En SEBASTPERU ofrecemos únicamente productos auténticos de las mejores marcas con factura y garantía oficial, respaldados por nuestro equipo de soporte técnico especializado en Lima y provincias.</p>
+                {p.faq.length > 0 && (
+                  <div className="pdp-faq">
+                    <h3>Preguntas frecuentes</h3>
+                    {p.faq.map((f, i) => (
+                      <details className="pdp-faq-item" key={i}>
+                        <summary>{f.q}</summary>
+                        <p>{f.a}</p>
+                      </details>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {tab === 'specs' && (
