@@ -12,7 +12,7 @@ const STATUSES = ['Activo', 'Borrador', 'Agotado', 'Descontinuado']
 
 const empty = () => ({
   name: '', slug: '', sku: '', mpn: '', ean: '', brand: '', status: 'Activo',
-  category: '', subcategory: '', tags: [],
+  category: '', subcategory: '', categories: [], tags: [],
   shortDesc: '', longDesc: '', benefits: [], features: [], faq: [],
   price: '', oldPrice: '', offerStart: '', offerEnd: '',
   stock: '', minStock: 5, allowBackorder: false,
@@ -42,12 +42,16 @@ export default function Products() {
   const attrDefsForCat = attrDefs.filter((d) => !d.categories?.length || d.categories.includes(modal?.category))
   const filtered = rows.filter((p) =>
     (!q || p.name.toLowerCase().includes(q.toLowerCase()) || p.sku.toLowerCase().includes(q.toLowerCase())) &&
-    (!catFilter || p.category === catFilter))
+    (!catFilter || p.category === catFilter || (p.categories || []).includes(catFilter)))
 
   const openNew = () => { setModal(empty()); setSlugEdited(false); setTab('General') }
   const openEdit = (p) => { setModal({ ...empty(), ...p, oldPrice: p.oldPrice || '', seo: { ...empty().seo, ...(p.seo || {}) }, _isEdit: true }); setSlugEdited(true); setTab('General') }
   const setM = (patch) => setModal((m) => ({ ...m, ...patch }))
   const setName = (name) => setM(slugEdited ? { name } : { name, slug: slugify(name) })
+  const toggleProdCat = (slug) => setModal((m) => {
+    const cur = m.categories || []
+    return { ...m, categories: cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug] }
+  })
   const subOptions = (catSlug) => cats.find((c) => c.slug === catSlug)?.subcategories || []
   const otherProducts = rows.filter((p) => !modal?.id || p.id !== modal.id).map((p) => ({ id: p.id, name: p.name }))
 
@@ -58,6 +62,8 @@ export default function Products() {
     try {
       await ProductsApi.save({
         ...modal, slug: (modal.slug || slugify(modal.name)).trim(),
+        // categorías adicionales: sin duplicar la principal ni vacíos
+        categories: [...new Set((modal.categories || []).filter((s) => s && s !== modal.category))],
         price: Number(modal.price) || 0,
         oldPrice: modal.oldPrice ? Number(modal.oldPrice) : undefined,
         stock: Number(modal.stock) || 0, minStock: Number(modal.minStock) || 0,
@@ -120,6 +126,16 @@ export default function Products() {
                 <label>Estado<select value={modal.status} onChange={(e) => setM({ status: e.target.value })}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></label>
                 <label>Categoría principal<select value={modal.category} onChange={(e) => setM({ category: e.target.value, subcategory: '' })}><option value="">Selecciona…</option>{cats.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></label>
                 <label>Subcategoría<select value={modal.subcategory} onChange={(e) => setM({ subcategory: e.target.value })}><option value="">—</option>{subOptions(modal.category).map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}</select></label>
+                <div className="col2">
+                  <label className="lbl">Categorías adicionales <span className="muted small">(el producto también aparecerá en estas)</span></label>
+                  <div className="adm-rel-list" style={{ maxHeight: 180 }}>
+                    {cats.filter((c) => c.slug !== modal.category).map((c) => (
+                      <label key={c.slug} className="adm-rel-item">
+                        <input type="checkbox" checked={(modal.categories || []).includes(c.slug)} onChange={() => toggleProdCat(c.slug)} /> {c.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
                 <div className="col2"><label className="lbl">Etiquetas</label><TagInput value={modal.tags} onChange={(v) => setM({ tags: v })} placeholder="Agregar etiqueta…" /></div>
                 <label className="col2">Descripción corta<textarea rows="2" value={modal.shortDesc} onChange={(e) => setM({ shortDesc: e.target.value })} /></label>
                 <div className="col2"><label className="lbl">Descripción larga</label><RichText value={modal.longDesc} onChange={(v) => setM({ longDesc: v })} /></div>

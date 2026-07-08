@@ -80,7 +80,8 @@ export default function Catalog({ mode = 'category' }) {
   // Origen de productos: para las categorías del diseño usa los productos del
   // storefront (con fotos, conectados); si no, cae al catálogo + productos de la API.
   const base = useMemo(() => {
-    const catalogAll = [...products.map((p) => applyOverride(p, overrides[p.id])), ...extras]
+    const staticAll = products.map((p) => applyOverride(p, overrides[p.id]))
+    const catalogAll = [...staticAll, ...extras]
     if (mode === 'all') return storeProducts.length ? storeProducts : catalogAll
     if (mode === 'offers') return storeProducts.filter((p) => p.off)
     if (mode === 'search') {
@@ -93,9 +94,20 @@ export default function Catalog({ mode = 'category' }) {
         return p.name.toLowerCase().includes(t) || (p.brand || '').toLowerCase().includes(t) || (p.sku || '').toLowerCase().includes(t)
       })
     }
+    // Un producto pertenece a la categoría por su categoría principal o por
+    // cualquiera de sus categorías adicionales (multi-categoría).
+    const inCat = (p) => catScope.has(p.category) || (Array.isArray(p.categories) && p.categories.some((c) => catScope.has(c)))
+    const inExtraCat = (p) => Array.isArray(p.categories) && p.categories.some((c) => catScope.has(c))
     const store = storeByCategory(slug)
-    if (store.length) return store
-    return catalogAll.filter((p) => catScope.has(p.category))
+    if (!store.length) return catalogAll.filter(inCat)
+    // Categoría "core" (con productos del storefront): conserva esos y añade
+    //   • productos del panel/API (creados/editados en el admin) de esta categoría
+    //   • productos estáticos asignados como categoría ADICIONAL
+    // sin duplicar (los estáticos solo por multi-cat para no repetir el catálogo).
+    const seen = new Set(store.map((p) => p.slug || p.id))
+    const fromAdmin = extras.filter((p) => inCat(p) && !seen.has(p.slug || p.id))
+    const fromStaticMulti = staticAll.filter((p) => inExtraCat(p) && !seen.has(p.slug || p.id))
+    return [...store, ...fromAdmin, ...fromStaticMulti]
   }, [mode, slug, query, overrides, extras, catScope])
 
   const brands = useMemo(() => [...new Set(base.map((p) => p.brand).filter(Boolean))], [base])
