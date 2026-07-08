@@ -12,7 +12,7 @@ services:
     name: sebasperu
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build && npm install --prefix api
+    buildCommand: npm install --include=dev && npm run build && npm install --prefix api
     startCommand: node api/src/index.js
     healthCheckPath: /api/health
     autoDeploy: true
