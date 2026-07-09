@@ -258,7 +258,13 @@
 .footer2-bottom .copy { color: rgba(255, 255, 255, .75); font-size: 12.5px; }
 .foot-pay { display: flex; align-items: center; gap: 8px; }
 .foot-pay .pm { width: 42px; height: 26px; }
-@media (max-width: 880px) { .footer2-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 880px) {
+  /* El newsletter ocupa toda la fila; así las columnas de enlaces reparten el
+     ancho por igual y no se aplastan (evita el desborde horizontal en móvil). */
+  .footer2-grid { grid-template-columns: 1fr 1fr; gap: 24px 20px; }
+  .footer2-news { grid-column: 1 / -1; }
+  .news2 { max-width: 100%; }
+}
 
 /* ---------- WHATSAPP PILL ---------- */
 .wa-pill {
