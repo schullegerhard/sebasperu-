@@ -5,7 +5,7 @@ import { Truck, Zap, MapPin, Shield, Heart, Cart, Star, Plus, ChevronRight } fro
 import { getProduct, getCategory, products, peso } from '../data/catalog.js'
 import { findStoreProduct, storeByCategory, productSlug } from '../data/storefront.js'
 import { useStore } from '../context/StoreContext.jsx'
-import { useProductOverrides, useExtraProducts, applyOverride, useStorefrontProducts, useHasRealCatalog } from '../context/ProductOverrides.jsx'
+import { useProductOverrides, useExtraProducts, applyOverride, useStorefrontProducts, useHasRealCatalog, useApiCategories, descendantSlugs } from '../context/ProductOverrides.jsx'
 import { useSeo, productJsonLd } from '../lib/seo.js'
 import { NotFound } from './Misc.jsx'
 
@@ -67,6 +67,7 @@ function normalize(base) {
     rating: Number(base.rating) || 5,
     reviews: Number(base.reviews) || 0,
     shortDesc: base.shortDesc || base.subtitle || base.blurb || '',
+    longDesc: base.longDesc || base.description || '',
     faq: (Array.isArray(base.faq) ? base.faq : []).filter((f) => f && f.q),
     image: base.image, images, tint: base.tint, label: base.label, seed: base.id,
     specsRows,
@@ -88,6 +89,7 @@ export default function Product() {
   const extras = useExtraProducts()
   const realCatalog = useStorefrontProducts()
   const hasReal = useHasRealCatalog()
+  const apiCats = useApiCategories()
   const [qty, setQty] = useState(1)
   const [tab, setTab] = useState('desc')
   const [wished, setWished] = useState(false)
@@ -101,11 +103,15 @@ export default function Product() {
     ? realCatalog.find((pp) => pp.slug === slug || productSlug(pp.name) === slug)
     : (findStoreProduct(slug) || getProduct(slug) || extras.find((pp) => pp.slug === slug))
   const p = normalize(raw ? applyOverride(raw, overrides[raw.id]) : null)
-  // "Podría interesarte": desde el catálogo real (misma categoría; se completa
-  // con otros productos). Así no aparecen productos de demostración.
+  // "Podría interesarte": productos reales de la MISMA CATEGORÍA PRINCIPAL (se
+  // sube por `parent` hasta el rubro raíz y se toman todos sus descendientes).
+  // Se completa con otros productos si el rubro tiene pocos. Sin datos demo.
   if (p && hasReal) {
-    const same = realCatalog.filter((r) => r.category === p.category && slugOf(r) !== slug)
-    const rest = realCatalog.filter((r) => r.category !== p.category && slugOf(r) !== slug)
+    const rootOf = (s) => { let cur = s; for (let i = 0; i < 12; i++) { const c = apiCats.find((x) => x.slug === cur); if (!c || !c.parent) break; cur = c.parent } return cur }
+    const scope = descendantSlugs(rootOf(p.category), apiCats)
+    const inScope = (r) => scope.has(r.category) || (Array.isArray(r.categories) && r.categories.some((c) => scope.has(c))) || (r.subcategory && scope.has(r.subcategory))
+    const same = realCatalog.filter((r) => inScope(r) && slugOf(r) !== slug)
+    const rest = realCatalog.filter((r) => !inScope(r) && slugOf(r) !== slug)
     p.related = [...same, ...rest].slice(0, 4)
   }
 
@@ -241,9 +247,15 @@ export default function Product() {
           <div className="pdp-tab-body">
             {tab === 'desc' && (
               <div className="pdp-desc">
-                <p className="lead">{p.name}</p>
-                <p>Producto original con garantía oficial de fábrica. Ideal para uso profesional y personal. Cuenta con las últimas tecnologías para garantizar el mejor rendimiento y durabilidad.</p>
-                <p>En SEBASTPERU ofrecemos únicamente productos auténticos de las mejores marcas con factura y garantía oficial, respaldados por nuestro equipo de soporte técnico especializado en Lima y provincias.</p>
+                {p.longDesc
+                  ? <div className="pdp-desc-html" dangerouslySetInnerHTML={{ __html: p.longDesc }} />
+                  : (
+                    <>
+                      <p className="lead">{p.name}</p>
+                      <p>Producto original con garantía oficial de fábrica. Ideal para uso profesional y personal. Cuenta con las últimas tecnologías para garantizar el mejor rendimiento y durabilidad.</p>
+                      <p>En SEBASTPERU ofrecemos únicamente productos auténticos de las mejores marcas con factura y garantía oficial, respaldados por nuestro equipo de soporte técnico especializado en Lima y provincias.</p>
+                    </>
+                  )}
                 {p.faq.length > 0 && (
                   <div className="pdp-faq">
                     <h3>Preguntas frecuentes</h3>
