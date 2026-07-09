@@ -17,10 +17,10 @@ const STATIC_IDS = new Set(staticProducts.map((p) => p.id))
 //   • cats: [categoríaAPI, …]     → jerarquía padre/hijo (campo `parent`) para que
 //                                    una categoría padre agregue los productos de
 //                                    sus subcategorías
-const Ctx = createContext({ byId: {}, list: [], cats: [], attrs: [], banners: [] })
+const Ctx = createContext({ byId: {}, list: [], cats: [], attrs: [], banners: [], pages: [] })
 
 export function ProductOverridesProvider({ children }) {
-  const [state, setState] = useState({ byId: {}, list: [], cats: [], attrs: [], banners: [] })
+  const [state, setState] = useState({ byId: {}, list: [], cats: [], attrs: [], banners: [], pages: [] })
   useEffect(() => {
     let alive = true
     Promise.all([
@@ -28,9 +28,10 @@ export function ProductOverridesProvider({ children }) {
       http.get('/api/categories').catch(() => null),
       http.get('/api/attributes').catch(() => null),
       http.get('/api/banners').catch(() => null),
-    ]).then(([rows, cats, attrs, banners]) => {
+      http.get('/api/pages').catch(() => null),
+    ]).then(([rows, cats, attrs, banners, pages]) => {
       if (!alive) return
-      const next = { byId: {}, list: [], cats: [], attrs: [], banners: [] }
+      const next = { byId: {}, list: [], cats: [], attrs: [], banners: [], pages: [] }
       if (Array.isArray(rows)) {
         for (const p of rows) if (p && p.id != null) next.byId[p.id] = p
         next.list = rows
@@ -38,11 +39,18 @@ export function ProductOverridesProvider({ children }) {
       if (Array.isArray(cats)) next.cats = cats
       if (Array.isArray(attrs)) next.attrs = attrs
       if (Array.isArray(banners)) next.banners = banners
+      if (Array.isArray(pages)) next.pages = pages
       setState(next)
     })
     return () => { alive = false }
   }, [])
   return <Ctx.Provider value={state}>{children}</Ctx.Provider>
+}
+
+// Página de contenido gestionada (por slug) o undefined si no existe en la BD.
+export const usePage = (slug) => {
+  const { pages } = useContext(Ctx)
+  return (pages || []).find((p) => p.slug === slug && p.active !== false)
 }
 
 // Banners activos del carrusel, gestionados en el admin. Vacío → la Home usa

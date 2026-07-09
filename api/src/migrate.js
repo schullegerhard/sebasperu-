@@ -6,6 +6,7 @@ import { dirname, resolve } from 'node:path'
 import bcrypt from 'bcryptjs'
 import { products, categories } from './catalog.js'
 import { USERS, COUPONS, CUSTOMERS, ORDERS, SETTINGS } from './seed-data.js'
+import { PAGES_SEED } from './pages-seed.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const schemaSql = readFileSync(resolve(here, '../db/schema.sql'), 'utf8')
@@ -14,6 +15,18 @@ export async function ensureSchema(pool) {
   await pool.query(schemaSql) // CREATE TABLE IF NOT EXISTS … (idempotente)
   const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM products')
   if (rows[0].n === 0) { await seedAll(pool); console.log('🌱 Base de datos sembrada (catálogo + usuarios).') }
+  // Siembra las páginas de contenido si la tabla está vacía (idempotente): así
+  // la BD actual y los despliegues nuevos tienen las páginas editables.
+  const pc = await pool.query('SELECT COUNT(*)::int AS n FROM pages')
+  if (pc.rows[0].n === 0) { await seedPages(pool); console.log('🌱 Páginas de contenido sembradas.') }
+}
+
+async function seedPages(pool) {
+  for (const p of PAGES_SEED) {
+    const data = { slug: p.slug, title: p.title, body: p.body, active: true }
+    const r = await pool.query('INSERT INTO pages (slug, active, data) VALUES ($1,$2,$3) ON CONFLICT (slug) DO NOTHING RETURNING id', [p.slug, true, JSON.stringify(data)])
+    if (r.rows[0]) await pool.query('UPDATE pages SET data = jsonb_set(data, \'{id}\', to_jsonb(id)) WHERE id=$1', [r.rows[0].id])
+  }
 }
 
 export async function seedAll(pool, { force = false } = {}) {

@@ -53,7 +53,7 @@ const columns = [
   {
     title: 'Ayuda al cliente',
     links: [
-      ['Preguntas frecuentes', '/legal/preguntas'], ['Cobertura de envíos', '/legal/devoluciones'],
+      ['Preguntas frecuentes', '/legal/preguntas'], ['Cobertura de envíos', '/legal/envios'],
       ['Seguimiento de pedido', '/cuenta'], ['Escríbenos por WhatsApp', 'https://wa.me/51925552042'],
     ],
   },
@@ -61,7 +61,7 @@ const columns = [
     title: 'Legales',
     links: [
       ['Política de privacidad', '/legal/privacidad'], ['Política de devoluciones', '/legal/devoluciones'],
-      ['Términos y condiciones', '/legal/terminos'], ['Política de envíos', '/legal/devoluciones'],
+      ['Términos y condiciones', '/legal/terminos'], ['Política de envíos', '/legal/envios'],
     ],
   },
 ]

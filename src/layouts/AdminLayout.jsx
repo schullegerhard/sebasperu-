@@ -3,7 +3,7 @@ import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../admin/AuthContext.jsx'
 import {
   Grid, Box, Layers, Clipboard, Users, Boxes, Ticket, BarChart, Settings as Gear,
-  LogOut, Menu, Bell, Search, Tag, Zap,
+  LogOut, Menu, Bell, Search, Tag, Zap, FileText,
 } from '../components/Icons.jsx'
 
 const NAV = [
@@ -16,6 +16,7 @@ const NAV = [
   { to: '/admin/inventario', label: 'Inventario', perm: 'inventory', icon: <Boxes size={18} /> },
   { to: '/admin/cupones', label: 'Cupones', perm: 'coupons', icon: <Ticket size={18} /> },
   { to: '/admin/banners', label: 'Banners', perm: 'banners', icon: <Zap size={18} /> },
+  { to: '/admin/paginas', label: 'Páginas', perm: 'banners', icon: <FileText size={18} /> },
   { to: '/admin/reportes', label: 'Reportes', perm: 'reports', icon: <BarChart size={18} /> },
   { to: '/admin/configuracion', label: 'Configuración', perm: 'settings', icon: <Gear size={18} /> },
 ]

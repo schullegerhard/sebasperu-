@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Breadcrumbs } from '../components/ui.jsx'
 import { useSeo } from '../lib/seo.js'
+import { usePage } from '../context/ProductOverrides.jsx'
 import { NotFound } from './Misc.jsx'
 
 /* ---------- Libro de Reclamaciones (requisito 12, obligatorio en Perú) ---------- */
@@ -97,24 +98,30 @@ const COPY = {
 export default function Legal() {
   const { page } = useParams()
   const isLR = page === 'libro-reclamaciones'
+  // Página gestionada desde el admin (Admin → Páginas). Si no existe, se usa el
+  // texto por defecto (COPY). El body gestionado es HTML del editor.
+  const managed = usePage(page)
   const copy = COPY[page]
+  const title = isLR ? 'Libro de Reclamaciones' : (managed?.title || copy?.title)
 
   useSeo({
-    title: isLR ? 'Libro de Reclamaciones' : copy?.title,
+    title,
     path: `/legal/${page}`,
-    description: isLR ? 'Libro de Reclamaciones virtual de SebasPeru.' : copy?.body?.[0],
+    description: isLR ? 'Libro de Reclamaciones virtual de SebasPeru.' : (managed?.title || copy?.body?.[0]),
   })
 
-  if (!isLR && !copy) return <NotFound />
+  if (!isLR && !managed && !copy) return <NotFound />
 
   return (
     <div className="container page legal-page">
-      <Breadcrumbs items={[{ label: 'Inicio', to: '/' }, { label: isLR ? 'Libro de Reclamaciones' : copy.title }]} />
-      <h1 className="page-title">{isLR ? 'Libro de Reclamaciones' : copy.title}</h1>
+      <Breadcrumbs items={[{ label: 'Inicio', to: '/' }, { label: title }]} />
+      <h1 className="page-title">{title}</h1>
       {isLR ? <LibroReclamaciones /> : (
         <div className="legal-body">
-          {copy.body.map((p, i) => <p key={i}>{p}</p>)}
-          <p className="muted small">Última actualización: 2024. Para consultas escríbenos a ventas@sebasperu.com.</p>
+          {managed?.body
+            ? <div className="legal-html" dangerouslySetInnerHTML={{ __html: managed.body }} />
+            : copy.body.map((p, i) => <p key={i}>{p}</p>)}
+          <p className="muted small legal-updated">Para consultas escríbenos a ventas@sebasperu.com.</p>
         </div>
       )}
     </div>

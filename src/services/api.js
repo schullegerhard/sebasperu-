@@ -54,6 +54,12 @@ export const Banners = {
   move: (id, dir) => http.patch(`/api/banners/${id}/move`, { dir }),
 }
 
+export const Pages = {
+  list: () => http.get('/api/pages'),
+  save: (data) => (data.id ? http.put(`/api/pages/${data.id}`, data) : http.post('/api/pages', data)),
+  remove: (id) => http.del(`/api/pages/${id}`),
+}
+
 // Algunas lecturas dependen del rol; si la API responde 403, devolvemos vacío.
 const safe = (p) => p.catch(() => [])
 

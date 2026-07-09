@@ -87,3 +87,11 @@ CREATE TABLE IF NOT EXISTS banners (
   active   BOOLEAN DEFAULT TRUE,
   data     JSONB NOT NULL      -- { id, theme, badge, title, subtitle, cta, link, image, active }
 );
+
+-- Páginas de contenido editables (legales / institucionales) del pie de página.
+CREATE TABLE IF NOT EXISTS pages (
+  id       SERIAL PRIMARY KEY,
+  slug     TEXT UNIQUE NOT NULL,
+  active   BOOLEAN DEFAULT TRUE,
+  data     JSONB NOT NULL      -- { id, slug, title, body(HTML), active }
+);

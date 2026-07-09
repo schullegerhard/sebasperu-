@@ -13,6 +13,7 @@ import {
   listCustomers, listCoupons, saveCoupon, removeCoupon, toggleCoupon, getSettings, saveSettings,
   listAttributes, saveAttribute, removeAttribute,
   listBanners, saveBanner, removeBanner, toggleBanner, moveBanner,
+  listPages, savePage, removePage,
 } from './store.js'
 import { login, requireAuth, requireRole } from './auth.js'
 
@@ -98,6 +99,12 @@ app.put('/api/banners/:id', requireAuth, requireRole('Marketing'), wrap(async (r
 app.delete('/api/banners/:id', requireAuth, requireRole('Marketing'), wrap(async (req, res) => { await removeBanner(Number(req.params.id)); res.json({ ok: true }) }))
 app.patch('/api/banners/:id/toggle', requireAuth, requireRole('Marketing'), wrap(async (req, res) => ok(res, await toggleBanner(Number(req.params.id)))))
 app.patch('/api/banners/:id/move', requireAuth, requireRole('Marketing'), wrap(async (req, res) => ok(res, await moveBanner(Number(req.params.id), Number(req.body.dir)))))
+
+// Páginas de contenido (legales/institucionales): lectura pública, escritura Marketing.
+app.get('/api/pages', wrap(async (req, res) => ok(res, await listPages())))
+app.post('/api/pages', requireAuth, requireRole('Marketing'), wrap(async (req, res) => res.status(201).json(await savePage(req.body))))
+app.put('/api/pages/:id', requireAuth, requireRole('Marketing'), wrap(async (req, res) => ok(res, await savePage({ ...req.body, id: Number(req.params.id) }))))
+app.delete('/api/pages/:id', requireAuth, requireRole('Marketing'), wrap(async (req, res) => { await removePage(Number(req.params.id)); res.json({ ok: true }) }))
 
 // Sirve el front-end (build de Vite) en el mismo origen, si existe el dist.
 // Así un solo dominio expone la tienda/admin (SPA) y la API (/api/*).

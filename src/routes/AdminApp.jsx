@@ -12,6 +12,7 @@ import Customers from '../admin/pages/Customers.jsx'
 import Inventory from '../admin/pages/Inventory.jsx'
 import Coupons from '../admin/pages/Coupons.jsx'
 import Banners from '../admin/pages/Banners.jsx'
+import PagesAdmin from '../admin/pages/Pages.jsx'
 import Reports from '../admin/pages/Reports.jsx'
 import Settings from '../admin/pages/Settings.jsx'
 import '../admin/admin.css'
@@ -35,6 +36,7 @@ export default function AdminApp() {
         <Route path="inventario" element={guard('inventory', Inventory)} />
         <Route path="cupones" element={guard('coupons', Coupons)} />
         <Route path="banners" element={guard('banners', Banners)} />
+        <Route path="paginas" element={guard('banners', PagesAdmin)} />
         <Route path="reportes" element={guard('reports', Reports)} />
         <Route path="configuracion" element={guard('settings', Settings)} />
         <Route path="*" element={guard('dashboard', Dashboard)} />

@@ -5,6 +5,7 @@ import pg from 'pg'
 import bcrypt from 'bcryptjs'
 import { products as seedProducts, categories as seedCategories } from './catalog.js'
 import { ensureSchema } from './migrate.js'
+import { PAGES_SEED } from './pages-seed.js'
 
 let pool = null
 export let usingDb = false
@@ -51,7 +52,8 @@ const mem = {
     { id: 2, position: 1, active: true, theme: 'orange', badge: 'NUEVA COLECCIÓN 2024', title: 'Laptops HP, Dell y Lenovo desde S/ 1,899', subtitle: 'Procesadores Intel Core i5 e i7 de 12ª y 13ª generación. Cuotas sin intereses.', cta: 'Ver Laptops', link: '/categoria/laptops-pc', image: '/img/photo-1517336714731-489689fd1ca8.jpg' },
     { id: 3, position: 2, active: true, theme: 'green', badge: 'STOCK DISPONIBLE', title: 'Tóner original para impresoras láser', subtitle: 'HP, Samsung, Brother y Epson. Entrega en 24 horas en Lima.', cta: 'Ver Tóner', link: '/categoria/toner', image: '/img/photo-1586953208448-b95a79798f07.jpg' },
   ],
-  oseq: 1003, pseq: Math.max(...seedProducts.map((p) => p.id)) + 1, cseq: 5, aseq: 1, bseq: 3,
+  pages: PAGES_SEED.map((p, i) => ({ id: i + 1, active: true, ...p })),
+  oseq: 1003, pseq: Math.max(...seedProducts.map((p) => p.id)) + 1, cseq: 5, aseq: 1, bseq: 3, gseq: PAGES_SEED.length,
 }
 
 const slugify = (s) => (s || '').toString().toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -345,6 +347,47 @@ export async function moveBanner(id, dir) {
     list[i].position = j; list[j].position = i
   }
   return listBanners()
+}
+
+/* ======================= PÁGINAS DE CONTENIDO ======================= */
+const slugifyPage = (s) => slugify(s || '')
+function cleanPage(input) {
+  return {
+    slug: slugifyPage(input.slug || input.title),
+    title: (input.title || '').trim(),
+    body: typeof input.body === 'string' ? input.body : '',
+    active: input.active !== false,
+  }
+}
+export async function listPages() {
+  if (usingDb) return (await pool.query('SELECT data FROM pages ORDER BY id')).rows.map((r) => r.data)
+  return [...mem.pages]
+}
+export async function savePage(input) {
+  const clean = cleanPage(input)
+  if (!clean.slug) return null
+  if (usingDb) {
+    // Upsert por slug: si existe la página con ese slug (o id), se actualiza.
+    const cur = (await pool.query('SELECT id, data FROM pages WHERE slug=$1 OR id=$2', [clean.slug, input.id || 0])).rows[0]
+    if (cur) {
+      const page = { ...cur.data, ...clean, id: cur.id }
+      await pool.query('UPDATE pages SET slug=$2, active=$3, data=$4 WHERE id=$1', [cur.id, page.slug, page.active, JSON.stringify(page)])
+      return page
+    }
+    const r = await pool.query('INSERT INTO pages (slug, active, data) VALUES ($1,$2,$3) RETURNING id', [clean.slug, clean.active, JSON.stringify(clean)])
+    const id = r.rows[0].id
+    const page = { ...clean, id }
+    await pool.query('UPDATE pages SET data=$2 WHERE id=$1', [id, JSON.stringify(page)])
+    return page
+  }
+  const i = mem.pages.findIndex((p) => p.slug === clean.slug || (input.id && p.id === Number(input.id)))
+  if (i >= 0) { mem.pages[i] = { ...mem.pages[i], ...clean, id: mem.pages[i].id }; return mem.pages[i] }
+  const page = { ...clean, id: ++mem.gseq }
+  mem.pages.push(page); return page
+}
+export async function removePage(id) {
+  if (usingDb) { await pool.query('DELETE FROM pages WHERE id=$1', [id]); return true }
+  mem.pages = mem.pages.filter((p) => p.id !== Number(id)); return true
 }
 
 /* ============================== USUARIOS ============================== */
