@@ -4,7 +4,7 @@ import { ProductImage } from '../components/imageMap.jsx'
 import { Search, X, Star, Heart, Cart, ChevronRight } from '../components/Icons.jsx'
 import { products, getCategory, getCategoryMeta, peso } from '../data/catalog.js'
 import { storeByCategory, storeProducts, productSlug } from '../data/storefront.js'
-import { useProductOverrides, useExtraProducts, useApiCategories, useAttributeDefs, applyOverride, descendantSlugs } from '../context/ProductOverrides.jsx'
+import { useProductOverrides, useExtraProducts, useApiCategories, useAttributeDefs, applyOverride, descendantSlugs, useStorefrontProducts, useHasRealCatalog } from '../context/ProductOverrides.jsx'
 import { useStore } from '../context/StoreContext.jsx'
 import { useSeo, breadcrumbJsonLd } from '../lib/seo.js'
 
@@ -72,6 +72,8 @@ export default function Catalog({ mode = 'category' }) {
   const extras = useExtraProducts()
   const apiCats = useApiCategories()
   const attrDefs = useAttributeDefs()
+  const realCatalog = useStorefrontProducts()
+  const hasReal = useHasRealCatalog()
 
   const catScope = useMemo(() => descendantSlugs(slug, apiCats), [slug, apiCats])
   const meta = mode === 'category' ? getCategoryMeta(slug) : null
@@ -82,6 +84,25 @@ export default function Catalog({ mode = 'category' }) {
   // Origen de productos: para las categorías del diseño usa los productos del
   // storefront (con fotos, conectados); si no, cae al catálogo + productos de la API.
   const base = useMemo(() => {
+    const inScope = (p, scope) => scope.has(p.category) || (Array.isArray(p.categories) && p.categories.some((c) => scope.has(c))) || (p.subcategory && scope.has(p.subcategory))
+
+    // ---- Catálogo REAL (BD del cliente): fuente única, sin datos de demostración ----
+    if (hasReal) {
+      if (mode === 'all') return realCatalog
+      if (mode === 'offers') return realCatalog.filter((p) => p.oldPrice && Number(p.oldPrice) > Number(p.price))
+      if (mode === 'search') {
+        const t = query.trim().toLowerCase()
+        return realCatalog.filter((p) => p.name.toLowerCase().includes(t) || (p.brand || '').toLowerCase().includes(t) || (p.sku || '').toLowerCase().includes(t))
+      }
+      const forCat = (root) => realCatalog.filter((p) => inScope(p, descendantSlugs(root, apiCats)))
+      let list = forCat(slug)
+      let up = apiCats.find((c) => c.slug === slug)?.parent
+      let guard = 0
+      while (up && !list.length && guard++ < 8) { list = forCat(up); up = apiCats.find((c) => c.slug === up)?.parent }
+      return list
+    }
+
+    // ---- Catálogo de DEMOSTRACIÓN (BD vacía): productos del diseño ----
     const staticAll = products.map((p) => applyOverride(p, overrides[p.id]))
     const catalogAll = [...staticAll, ...extras]
     if (mode === 'all') return storeProducts.length ? storeProducts : catalogAll
@@ -96,12 +117,9 @@ export default function Catalog({ mode = 'category' }) {
         return p.name.toLowerCase().includes(t) || (p.brand || '').toLowerCase().includes(t) || (p.sku || '').toLowerCase().includes(t)
       })
     }
-    // Productos de una categoría y sus descendientes. Un producto pertenece por
-    // su categoría principal, cualquiera de sus categorías adicionales, o su
-    // SUBcategoría (así los ítems del menú listan sus productos).
     const productsFor = (rootSlug) => {
       const scope = descendantSlugs(rootSlug, apiCats)
-      const inCat = (p) => scope.has(p.category) || (Array.isArray(p.categories) && p.categories.some((c) => scope.has(c))) || (p.subcategory && scope.has(p.subcategory))
+      const inCat = (p) => inScope(p, scope)
       const inExtra = (p) => (Array.isArray(p.categories) && p.categories.some((c) => scope.has(c))) || (p.subcategory && scope.has(p.subcategory))
       const store = storeByCategory(rootSlug)
       if (!store.length) return catalogAll.filter(inCat)
@@ -113,8 +131,6 @@ export default function Catalog({ mode = 'category' }) {
       ]
     }
     let list = productsFor(slug)
-    // Si una subcategoría no tiene productos propios, muestra los de su categoría
-    // superior (para que ningún ítem del menú quede vacío mientras se recategoriza).
     let up = apiCats.find((c) => c.slug === slug)?.parent
     let guard = 0
     while (up && !list.length && guard++ < 8) {
@@ -122,7 +138,7 @@ export default function Catalog({ mode = 'category' }) {
       up = apiCats.find((c) => c.slug === up)?.parent
     }
     return list
-  }, [mode, slug, query, overrides, extras, apiCats])
+  }, [mode, slug, query, overrides, extras, apiCats, realCatalog, hasReal])
 
   const brands = useMemo(() => [...new Set(base.map((p) => p.brand).filter(Boolean))], [base])
   const prices = base.map((p) => Number(p.price) || 0)

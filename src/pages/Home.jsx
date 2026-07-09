@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Truck, Headset, ChevronLeft, ChevronRight, Shield,
@@ -6,7 +6,7 @@ import {
 } from '../components/Icons.jsx'
 import { ProductImage } from '../components/imageMap.jsx'
 import { useStore } from '../context/StoreContext.jsx'
-import { useBanners } from '../context/ProductOverrides.jsx'
+import { useBanners, useStorefrontProducts, useHasRealCatalog, useApiCategories, descendantSlugs } from '../context/ProductOverrides.jsx'
 import { useSeo } from '../lib/seo.js'
 import { peso } from '../data/catalog.js'
 import { productSlug } from '../data/storefront.js'
@@ -200,8 +200,9 @@ const FlashCard = ({ p }) => {
   )
 }
 
-const OfertasFlash = () => {
+const OfertasFlash = ({ items }) => {
   const { h, m, s } = useCountdown()
+  if (!items || !items.length) return null
   return (
     <section className="flash-sec">
       <div className="container">
@@ -211,7 +212,7 @@ const OfertasFlash = () => {
           <Link className="flash-all" to="/ofertas">Ver todas <ChevronRight size={15} /></Link>
         </div>
         <Carousel className="flash-car">
-          {flashOffers.map((p) => <FlashCard key={p.id} p={p} />)}
+          {items.map((p) => <FlashCard key={p.id} p={p} />)}
         </Carousel>
       </div>
     </section>
@@ -341,8 +342,8 @@ const DesignPromos = () => (
   </>
 )
 
-// Banners promocionales gestionados: se intercalan con las secciones de productos.
-// El orden de las tarjetas (arriba→abajo) es el del panel; se reparten en las filas.
+// Banners promocionales gestionados (modo demo): se intercalan con las secciones
+// de productos del diseño. El orden de las tarjetas (arriba→abajo) es el del panel.
 const ManagedPromos = ({ promos }) => (
   <>
     <PromoRow items={promos.slice(0, 2)} />
@@ -357,20 +358,68 @@ const ManagedPromos = ({ promos }) => (
   </>
 )
 
+// Cuerpo REAL: secciones de productos de la BD (solo las que tienen productos),
+// con los bloques promocionales del admin repartidos entre ellas.
+const RealBody = ({ sections, promos }) => {
+  const per = sections.length ? Math.ceil(promos.length / sections.length) : promos.length
+  return (
+    <>
+      {sections.map((s, i) => (
+        <Fragment key={s.slug || s.title}>
+          <PromoRow items={promos.slice(i * per, i * per + per)} />
+          <ProductSection title={s.title} items={s.items} to={s.to} />
+        </Fragment>
+      ))}
+      <PromoRow items={promos.slice(sections.length * per)} last />
+    </>
+  )
+}
+
 export default function Home() {
   useSeo({
     title: 'Tecnología que impulsa tu negocio',
     description: 'SebasPeru — Impresoras, tóner, tintas, laptops y accesorios de las mejores marcas. Ventas corporativas, factura electrónica y envíos a todo el Perú.',
     path: '/',
   })
+  const all = useStorefrontProducts()
+  const hasReal = useHasRealCatalog()
+  const apiCats = useApiCategories()
   const promos = useBanners().filter((b) => b && b.active && b.slot === 'promo')
+
+  // Productos reales por categoría (incluye subcategorías vía `parent`). Se pueden
+  // EXCLUIR ramas (p. ej. la sección "Impresoras" no repite tóner/tintas, que
+  // están anidadas bajo Impresión pero tienen su propia sección).
+  const inScope = (p, s) => s.has(p.category)
+    || (Array.isArray(p.categories) && p.categories.some((c) => s.has(c)))
+    || (p.subcategory && s.has(p.subcategory))
+  const pick = (root, exclude = [], n = 10) => {
+    const s = descendantSlugs(root, apiCats)
+    const ex = exclude.map((e) => descendantSlugs(e, apiCats))
+    return all.filter((p) => inScope(p, s) && !ex.some((e) => inScope(p, e))).slice(0, n)
+  }
+  const flash = hasReal
+    ? all.filter((p) => p.oldPrice && Number(p.oldPrice) > Number(p.price))
+        .map((p) => ({ ...p, off: Math.round((1 - p.price / p.oldPrice) * 100) })).slice(0, 10)
+    : flashOffers
+  const sections = hasReal ? (() => {
+    const preset = [
+      { slug: 'impresoras', title: 'Impresoras', items: pick('impresoras', ['toner', 'tintas']), to: '/categoria/impresoras' },
+      { slug: 'toner', title: 'Tóner para Impresora', items: pick('toner'), to: '/categoria/toner' },
+      { slug: 'tintas', title: 'Tintas para Impresora', items: pick('tintas'), to: '/categoria/tintas' },
+      { slug: 'laptops-pc', title: 'Computación', items: pick('laptops-pc'), to: '/categoria/laptops-pc' },
+    ].filter((s) => s.items.length)
+    return preset.length ? preset : [{ slug: 'todos', title: 'Productos', items: all.slice(0, 12), to: '/productos' }]
+  })() : null
+
   return (
     <>
       <Hero />
       <Features />
       <Categorias />
-      <OfertasFlash />
-      {promos.length ? <ManagedPromos promos={promos} /> : <DesignPromos />}
+      <OfertasFlash items={flash} />
+      {hasReal
+        ? <RealBody sections={sections} promos={promos} />
+        : (promos.length ? <ManagedPromos promos={promos} /> : <DesignPromos />)}
     </>
   )
 }

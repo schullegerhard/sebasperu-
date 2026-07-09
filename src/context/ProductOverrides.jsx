@@ -114,6 +114,34 @@ export function useExtraProducts() {
     .map(normalize), [list])
 }
 
+// ¿La BD tiene un catálogo REAL (productos publicados creados/editados en el
+// admin)? En cuanto el cliente sube sus productos, la tienda deja de mostrar el
+// catálogo de demostración (diseño) y usa solo los reales.
+function publishedFrom(list) {
+  return (list || []).filter((p) => p && p.id != null && p.status !== 'Borrador' && p.status !== 'Descontinuado')
+}
+export function useHasRealCatalog() {
+  const { list } = useContext(Ctx)
+  return publishedFrom(list).length > 0
+}
+
+// Universo de productos del storefront (fuente única para catálogo, categorías,
+// buscador y Home). Si la BD tiene productos publicados → SOLO esos (cada uno
+// fusionado sobre su base estática si existe, para heredar specs/related/…).
+// Si la BD está vacía → catálogo de demostración del diseño como respaldo.
+export function useStorefrontProducts() {
+  const { list, byId } = useContext(Ctx)
+  return useMemo(() => {
+    const published = publishedFrom(list)
+    if (!published.length) return staticProducts.map((p) => applyOverride(p, byId[p.id])) // modo demo
+    const staticById = new Map(staticProducts.map((p) => [p.id, p]))
+    return published.map((p) => {
+      const base = staticById.get(p.id)
+      return base ? applyOverride(base, p) : normalize(p)
+    })
+  }, [list, byId])
+}
+
 // Conjunto con un slug de categoría y TODOS sus descendientes (según `parent`),
 // para que la página de una categoría padre incluya los productos de sus hijas.
 export function descendantSlugs(slug, cats) {

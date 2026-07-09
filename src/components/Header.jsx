@@ -7,7 +7,7 @@ import {
 import { ProductImage } from './imageMap.jsx'
 import { products, peso } from '../data/catalog.js'
 import { MENU_TREE } from '../data/menu.js'
-import { useProductOverrides, useExtraProducts, applyOverride } from '../context/ProductOverrides.jsx'
+import { useProductOverrides, useExtraProducts, applyOverride, useStorefrontProducts, useHasRealCatalog } from '../context/ProductOverrides.jsx'
 import { useStore } from '../context/StoreContext.jsx'
 import { track } from '../lib/analytics.js'
 
@@ -43,16 +43,19 @@ function PredictiveSearch({ variant = 'inner' }) {
   const navigate = useNavigate()
   const overrides = useProductOverrides()
   const extras = useExtraProducts()
+  const realCatalog = useStorefrontProducts()
+  const hasReal = useHasRealCatalog()
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase()
     if (term.length < 2) return []
-    return [...products.map((p) => applyOverride(p, overrides[p.id])), ...extras]
+    const pool = hasReal ? realCatalog : [...products.map((p) => applyOverride(p, overrides[p.id])), ...extras]
+    return pool
       .filter((p) =>
-        p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term) ||
-        p.brand.toLowerCase().includes(term) || p.model.toLowerCase().includes(term))
+        (p.name || '').toLowerCase().includes(term) || (p.sku || '').toLowerCase().includes(term) ||
+        (p.brand || '').toLowerCase().includes(term) || (p.model || '').toLowerCase().includes(term))
       .slice(0, 6)
-  }, [q, overrides, extras])
+  }, [q, overrides, extras, realCatalog, hasReal])
 
   useEffect(() => {
     const onClick = (e) => { if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false) }
