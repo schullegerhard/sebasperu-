@@ -57,8 +57,8 @@ const bannerToSlide = (b) => ({
 })
 
 const Hero = () => {
-  // Banners gestionados en el admin (activos); si no hay, usa los del diseño.
-  const managed = useBanners().filter((b) => b && b.active)
+  // Banners gestionados en el admin (activos, ubicación = carrusel); si no hay, usa los del diseño.
+  const managed = useBanners().filter((b) => b && b.active && (b.slot || 'hero') === 'hero')
   const slides = managed.length ? managed.map(bannerToSlide) : heroSlides
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -312,27 +312,65 @@ const BannerEspecial = () => (
   </div></section>
 )
 
+// Fila de bloques promocionales gestionados desde el admin (Banners → «Bloque promocional»).
+const PromoRow = ({ items, last }) => {
+  if (!items || !items.length) return null
+  const cls = items.length >= 3 ? 'promo3-trio' : items.length === 2 ? 'promo3-pair' : 'promo3-solo'
+  return (
+    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={cls}>
+      {items.map((b, i) => (
+        <Promo key={b.id ?? i} theme={b.theme} eyebrow={b.badge} title={b.title}
+          accent={b.accent} sub={b.subtitle} btn={b.cta || 'Ver más'} to={b.link || '/productos'} bg={b.image} />
+      ))}
+    </div></div></section>
+  )
+}
+
+// Banners promocionales del diseño (respaldo cuando el admin no tiene ninguno).
+const DesignPromos = () => (
+  <>
+    <BannerImpresion />
+    <ProductSection title="Impresoras" items={homeImpresoras} to="/categoria/impresoras" />
+    <BannerToner />
+    <ProductSection title="Tóner para Impresora" items={homeToner} to="/categoria/toner" />
+    <BannerTintas />
+    <ProductSection title="Tintas para Impresora" items={homeTintas} to="/categoria/tintas" />
+    <BannerLaptops />
+    <ProductSection title="Laptops" items={homeLaptops} to="/categoria/laptops-pc" />
+    <BannerEspecial />
+  </>
+)
+
+// Banners promocionales gestionados: se intercalan con las secciones de productos.
+// El orden de las tarjetas (arriba→abajo) es el del panel; se reparten en las filas.
+const ManagedPromos = ({ promos }) => (
+  <>
+    <PromoRow items={promos.slice(0, 2)} />
+    <ProductSection title="Impresoras" items={homeImpresoras} to="/categoria/impresoras" />
+    <PromoRow items={promos.slice(2, 4)} />
+    <ProductSection title="Tóner para Impresora" items={homeToner} to="/categoria/toner" />
+    <PromoRow items={promos.slice(4, 6)} />
+    <ProductSection title="Tintas para Impresora" items={homeTintas} to="/categoria/tintas" />
+    <PromoRow items={promos.slice(6, 9)} />
+    <ProductSection title="Laptops" items={homeLaptops} to="/categoria/laptops-pc" />
+    <PromoRow items={promos.slice(9)} last />
+  </>
+)
+
 export default function Home() {
   useSeo({
     title: 'Tecnología que impulsa tu negocio',
     description: 'SebasPeru — Impresoras, tóner, tintas, laptops y accesorios de las mejores marcas. Ventas corporativas, factura electrónica y envíos a todo el Perú.',
     path: '/',
   })
+  const promos = useBanners().filter((b) => b && b.active && b.slot === 'promo')
   return (
     <>
       <Hero />
       <Features />
       <Categorias />
       <OfertasFlash />
-      <BannerImpresion />
-      <ProductSection title="Impresoras" items={homeImpresoras} to="/categoria/impresoras" />
-      <BannerToner />
-      <ProductSection title="Tóner para Impresora" items={homeToner} to="/categoria/toner" />
-      <BannerTintas />
-      <ProductSection title="Tintas para Impresora" items={homeTintas} to="/categoria/tintas" />
-      <BannerLaptops />
-      <ProductSection title="Laptops" items={homeLaptops} to="/categoria/laptops-pc" />
-      <BannerEspecial />
+      {promos.length ? <ManagedPromos promos={promos} /> : <DesignPromos />}
     </>
   )
 }

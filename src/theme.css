@@ -693,6 +693,7 @@
 /* ============ Banners promocionales ============ */
 .promo3-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .promo3-trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.promo3-solo { display: grid; grid-template-columns: 1fr; gap: 20px; }
 .promo3 { position: relative; border-radius: 14px; padding: 26px 30px; color: #fff; overflow: hidden; display: block; min-height: 148px; }
 .promo3-bg { position: absolute; top: 0; right: 0; bottom: 0; width: 52%; object-fit: cover; opacity: .55; z-index: 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 65%); mask-image: linear-gradient(90deg, transparent, #000 65%); }
 .promo3 > .promo3-eyebrow, .promo3 > .promo3-title, .promo3 > .promo3-accent, .promo3 > .promo3-sub, .promo3 > .promo3-btn { position: relative; z-index: 1; }
@@ -701,6 +702,7 @@
 .promo3.t-green { background: linear-gradient(120deg, #065f46, #16a34a); }
 .promo3.t-purple { background: linear-gradient(120deg, #5b21b6, #7c3aed); }
 .promo3.t-navy { background: linear-gradient(120deg, #0a1f5a, #15347e); }
+.promo3.t-orange { background: linear-gradient(120deg, #cc3300, #ff5500); }
 .promo3-eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: 1px; color: rgba(255, 255, 255, .7); text-transform: uppercase; }
 .promo3-title { font-size: 24px; font-weight: 800; margin: 10px 0 0; line-height: 1.12; }
 .promo3-accent { font-size: 24px; font-weight: 800; color: #ffd24d; line-height: 1.12; margin-top: 2px; }

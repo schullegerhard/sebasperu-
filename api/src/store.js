@@ -278,9 +278,11 @@ export async function removeAttribute(id) {
 /* ============================== BANNERS (carrusel home) ============================== */
 function cleanBanner(input) {
   return {
-    theme: input.theme || 'blue',                 // blue | orange | green | dark
+    slot: input.slot === 'promo' ? 'promo' : 'hero', // hero (carrusel) | promo (bloque)
+    theme: input.theme || 'blue',                 // blue | orange | green | dark | purple | navy
     badge: (input.badge || '').trim(),
     title: (input.title || '').trim(),
+    accent: (input.accent || '').trim(),          // línea destacada del promo (p. ej. "desde S/ 299")
     subtitle: (input.subtitle || '').trim(),
     cta: (input.cta || '').trim(),
     link: (input.link || '/productos').trim(),
