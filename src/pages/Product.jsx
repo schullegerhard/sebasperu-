@@ -5,7 +5,7 @@ import { Truck, Zap, MapPin, Shield, Heart, Cart, Star, Plus, ChevronRight } fro
 import { getProduct, getCategory, products, peso } from '../data/catalog.js'
 import { findStoreProduct, storeByCategory, productSlug } from '../data/storefront.js'
 import { useStore } from '../context/StoreContext.jsx'
-import { useProductOverrides, useExtraProducts, applyOverride } from '../context/ProductOverrides.jsx'
+import { useProductOverrides, useExtraProducts, applyOverride, useStorefrontProducts, useHasRealCatalog } from '../context/ProductOverrides.jsx'
 import { useSeo, productJsonLd } from '../lib/seo.js'
 import { NotFound } from './Misc.jsx'
 
@@ -86,14 +86,28 @@ export default function Product() {
   const { addToCart } = useStore()
   const overrides = useProductOverrides()
   const extras = useExtraProducts()
+  const realCatalog = useStorefrontProducts()
+  const hasReal = useHasRealCatalog()
   const [qty, setQty] = useState(1)
   const [tab, setTab] = useState('desc')
   const [wished, setWished] = useState(false)
   const [added, setAdded] = useState(false)
   const [imgIdx, setImgIdx] = useState(0)
 
-  const raw = findStoreProduct(slug) || getProduct(slug) || extras.find((p) => p.slug === slug)
+  // Con catálogo real (BD del cliente) se resuelve SOLO desde él (los productos
+  // demo dejan de ser accesibles). Sin catálogo real, se usa el del diseño.
+  const slugOf = (pp) => pp.slug || productSlug(pp.name)
+  const raw = hasReal
+    ? realCatalog.find((pp) => pp.slug === slug || productSlug(pp.name) === slug)
+    : (findStoreProduct(slug) || getProduct(slug) || extras.find((pp) => pp.slug === slug))
   const p = normalize(raw ? applyOverride(raw, overrides[raw.id]) : null)
+  // "Podría interesarte": desde el catálogo real (misma categoría; se completa
+  // con otros productos). Así no aparecen productos de demostración.
+  if (p && hasReal) {
+    const same = realCatalog.filter((r) => r.category === p.category && slugOf(r) !== slug)
+    const rest = realCatalog.filter((r) => r.category !== p.category && slugOf(r) !== slug)
+    p.related = [...same, ...rest].slice(0, 4)
+  }
 
   // Reinicia la imagen activa al cambiar de producto.
   useEffect(() => { setImgIdx(0) }, [slug])

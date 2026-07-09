@@ -884,9 +884,31 @@
 .pdp-rel-add:hover { background: var(--blue-dark); }
 @media (max-width: 1080px) {
   .pdp-grid { grid-template-columns: 1fr; }
-  .pdp-thumbs { flex-direction: row; }
+  /* Móvil/tablet: la imagen principal va primero; la galería de miniaturas
+     baja DEBAJO de ella (arriba solo se ve la foto grande, más compacto). */
+  .pdp-stage { order: 1; }
+  .pdp-thumbs { order: 2; flex-direction: row; flex-wrap: wrap; }
+  .pdp-info { order: 3; }
+  .pdp-side { order: 4; }
   .pdp-thumb { width: 64px; }
   .pdp-related-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  /* Aprovechar más ancho de pantalla: menos margen lateral */
+  .container { padding: 0 12px; }
+  /* Cabecera más compacta (no desperdiciar alto arriba). Especificidad alta
+     para ganar a la regla móvil de ≤900px que va después en el archivo. */
+  .site-header .header .container { padding: 8px 0; gap: 8px 12px; }
+  .site-header .header .searchbar { height: 40px; }
+  .site-header .header .logo-img { height: 30px; }
+  .site-header .hdr-burger { width: 38px; height: 38px; }
+  /* Ficha de producto: top compacto y cajas con menos relleno = más ancho útil */
+  .pdp { padding: 10px 0 32px; }
+  .pdp-crumb { margin-bottom: 10px; }
+  .pdp-tab-head button { padding: 13px 16px; }
+  .pdp-tab-body { padding: 16px 14px; }
+  .pdp-related { padding: 14px; }
+  .pdp-related-grid { gap: 10px; }
 }
 
 /* ============ Carruseles de Categorías y Ofertas Flash ============ */
