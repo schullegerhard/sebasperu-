@@ -5,7 +5,7 @@ import { Truck, Zap, MapPin, Shield, Cart, Star, Plus, ChevronRight } from '../c
 import { getProduct, getCategory, products, peso } from '../data/catalog.js'
 import { findStoreProduct, storeByCategory, productSlug } from '../data/storefront.js'
 import { useStore } from '../context/StoreContext.jsx'
-import { useProductOverrides, useExtraProducts, applyOverride, useStorefrontProducts, useHasRealCatalog, useApiCategories, descendantSlugs } from '../context/ProductOverrides.jsx'
+import { useProductOverrides, useExtraProducts, applyOverride, useStorefrontProducts, useHasRealCatalog, useApiCategories, descendantSlugs, useCatalogLoaded } from '../context/ProductOverrides.jsx'
 import { useSeo, productJsonLd } from '../lib/seo.js'
 import { NotFound } from './Misc.jsx'
 
@@ -90,6 +90,7 @@ export default function Product() {
   const realCatalog = useStorefrontProducts()
   const hasReal = useHasRealCatalog()
   const apiCats = useApiCategories()
+  const loaded = useCatalogLoaded()
   const [qty, setQty] = useState(1)
   const [tab, setTab] = useState('desc')
   const [added, setAdded] = useState(false)
@@ -126,7 +127,11 @@ export default function Product() {
     }
     : { title: 'Producto', path: `/producto/${slug}` })
 
-  if (!p) return <NotFound />
+  // Mientras la API aún carga no mostramos "no encontrado" (evita el parpadeo 404
+  // al abrir un enlace directo de producto); solo 404 si ya cargó y no existe.
+  if (!p) return loaded ? <NotFound /> : (
+    <div className="container page"><div className="pdp-loading"><span className="pdp-spinner" /> Cargando producto…</div></div>
+  )
 
   // Solo hay descuento si el precio anterior es MAYOR que el actual (evita el
   // "0" fantasma y el precio tachado duplicado cuando oldPrice === price).

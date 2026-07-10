@@ -36,6 +36,7 @@ const Seg = ({ value, onChange, options }) => (
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useStore()
   const [data, setData] = useState({
+    email: '',
     delivery: 'domicilio', // domicilio | tienda
     name: '', lastName: '', doc: '', address: '', reference: '',
     recipient: 'yo', // yo | otra
@@ -76,6 +77,7 @@ export default function Checkout() {
 
   const validate = () => {
     const e = {}
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) e.email = 'Ingresa un correo válido para enviarte el detalle de tu pedido.'
     if (!data.name.trim()) e.name = 'Ingresa tu nombre.'
     if (!data.lastName.trim()) e.lastName = 'Ingresa tu apellido.'
     if (!data.doc.trim()) e.doc = 'Ingresa tu DNI o CE.'
@@ -102,7 +104,7 @@ export default function Checkout() {
     try {
       await Orders.create({
         customer: `${data.name} ${data.lastName}`.trim() || 'Cliente invitado',
-        email: data.comprobante === 'factura' ? data.razonSocial : '—',
+        email: data.email.trim() || '—',
         total, payment: PAYMENTS.find((p) => p.id === data.payment)?.label || data.payment,
         region: data.delivery === 'tienda' ? 'Retiro en tienda' : 'Lima', date: '2026-07-01',
         items: cart.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
@@ -137,6 +139,15 @@ export default function Checkout() {
       <div className="co2-layout">
         {/* ----- Columna izquierda ----- */}
         <div className="co2-main">
+          {/* Contacto */}
+          <section className="co-card">
+            <h3 className="co-h">Contacto</h3>
+            <p className="co-sub">Te enviaremos el detalle y la confirmación de tu pedido a este correo.</p>
+            <div className="co-field">
+              <input type="email" inputMode="email" autoComplete="email" placeholder="Correo electrónico" className={errors.email ? 'err' : ''} value={data.email} onChange={setF('email')} />
+              {err('email')}
+            </div>
+          </section>
           {/* Entrega */}
           <section className="co-card">
             <h3 className="co-h">Entrega</h3>

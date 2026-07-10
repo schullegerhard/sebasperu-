@@ -357,11 +357,12 @@
 .cd-btn.primary.disabled { opacity: .5; pointer-events: none; }
 
 /* ---- Minimal checkout chrome ---- */
-.header-min { background: #fff; border-bottom: 1px solid var(--line); }
+.header-min { background: var(--blue); border-bottom: 1px solid rgba(255, 255, 255, .12); }
 .header-min .container { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+.header-min .logo-img { filter: brightness(0) invert(1); }
 .hm-secure, .hm-help { display: flex; align-items: center; gap: 10px; }
-.hm-secure svg { color: var(--blue); } .hm-secure b { display: block; font-size: 14px; font-weight: 700; color: #0f172a; } .hm-secure span { font-size: 12.5px; color: var(--text-2); }
-.hm-help { color: var(--blue); } .hm-help span { display: block; font-size: 12px; color: var(--text-2); } .hm-help b { display: block; font-size: 15px; font-weight: 800; color: var(--blue); }
+.hm-secure svg { color: #fff; } .hm-secure b { display: block; font-size: 14px; font-weight: 700; color: #fff; } .hm-secure span { font-size: 12.5px; color: rgba(255, 255, 255, .82); }
+.hm-help { color: #fff; } .hm-help span { display: block; font-size: 12px; color: rgba(255, 255, 255, .82); } .hm-help b { display: block; font-size: 15px; font-weight: 800; color: #fff; }
 @media (max-width: 720px) { .hm-secure { display: none; } }
 .footer-min { background: #fff; border-top: 1px solid var(--line); padding: 26px 0; }
 .footer-min .container { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
@@ -845,6 +846,9 @@
 .pdp-tab-head button.on { color: var(--blue); }
 .pdp-tab-head button.on::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--blue); }
 .pdp-tab-body { padding: 24px; }
+.pdp-loading { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 46vh; color: #5a7090; font-size: 15px; font-weight: 600; }
+.pdp-spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--blue); animation: pdp-spin .7s linear infinite; }
+@keyframes pdp-spin { to { transform: rotate(360deg); } }
 .pdp-desc { max-width: 800px; font-size: 14px; color: #5a7090; line-height: 1.7; }
 /* Descripción larga administrada (HTML del editor): tipografía legible. */
 .pdp-desc-html { font-size: 14px; color: #475569; line-height: 1.75; }
