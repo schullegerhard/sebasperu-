@@ -12,8 +12,10 @@ async function getJSON(path) {
   return res.json()
 }
 
+// Solo productos publicados (excluye borradores/descontinuados), igual que la tienda.
+const isPublished = (p) => p && p.status !== 'Borrador' && p.status !== 'Descontinuado'
 export async function getAllProducts() {
-  if (API) { try { return await getJSON('/api/products') } catch { /* fallback */ } }
+  if (API) { try { return (await getJSON('/api/products')).filter(isPublished) } catch { /* fallback */ } }
   return products
 }
 export async function getProductBySlug(slug) {
@@ -39,7 +41,9 @@ export async function getProductsByCategory(slug) {
     try {
       const [all, cats] = await Promise.all([getJSON('/api/products'), getJSON('/api/categories')])
       const scope = descendantSlugs(slug, cats)
-      return all.filter((p) => scope.has(p.category))
+      return all.filter(isPublished).filter((p) => scope.has(p.category)
+        || (Array.isArray(p.categories) && p.categories.some((c) => scope.has(c)))
+        || (p.subcategory && scope.has(p.subcategory)))
     } catch { /* fallback */ }
   }
   const scope = descendantSlugs(slug, categories)
@@ -56,6 +60,16 @@ export async function getCategories() {
 export async function getAttributes() {
   if (API) { try { return await getJSON('/api/attributes') } catch { /* fallback */ } }
   return []
+}
+
+// Páginas de contenido editables (Admin → Páginas). Sin API → vacío (usa COPY).
+export async function getPages() {
+  if (API) { try { return await getJSON('/api/pages') } catch { /* fallback */ } }
+  return []
+}
+export async function getPageBySlug(slug) {
+  const pages = await getPages()
+  return pages.find((p) => p.slug === slug && p.active !== false)
 }
 
 export { categoryMeta, flashOffers, impresorasBest, tonerBest, tintasBest, homeBrands, homeCategories }

@@ -15,27 +15,29 @@ export async function generateStaticParams() {
 
 // SEO por página: título, descripción y canonical renderizados en el servidor.
 export async function generateMetadata({ params }) {
-  const cat = await getCategoryBySlug(params.slug)
+  const { slug } = await params
+  const cat = await getCategoryBySlug(slug)
   if (!cat) return { title: 'Categoría no encontrada' }
-  const meta = categoryMeta[params.slug]
+  const meta = categoryMeta[slug]
   const title = meta?.title || cat.name
   const description = meta?.subtitle || `Compra ${cat.name} en SebasPeru. Filtra por marca, precio y disponibilidad. Envíos a todo el Perú.`
   return {
     title, description,
-    alternates: { canonical: `/categoria/${params.slug}` },
-    openGraph: { title, description, url: `${ORIGIN}/categoria/${params.slug}` },
+    alternates: { canonical: `/categoria/${slug}` },
+    openGraph: { title, description, url: `${ORIGIN}/categoria/${slug}` },
   }
 }
 
 export default async function CategoryPage({ params }) {
+  const { slug } = await params
   const [cat, items, cats, attrDefs] = await Promise.all([
-    getCategoryBySlug(params.slug),
-    getProductsByCategory(params.slug), // ya agrega productos de subcategorías
+    getCategoryBySlug(slug),
+    getProductsByCategory(slug), // ya agrega productos de subcategorías
     getCategories(),
     getAttributes(),
   ])
   if (!cat) notFound()
-  const meta = categoryMeta[params.slug]
+  const meta = categoryMeta[slug]
   // Orden destacado por defecto (el cliente puede reordenar).
   let ordered = items
   if (meta?.featured) {
@@ -56,7 +58,7 @@ export default async function CategoryPage({ params }) {
         ))}
       </nav>
 
-      <CategoryFilters slug={params.slug} meta={meta} cat={cat} products={ordered} cats={cats} attrDefs={attrDefs} />
+      <CategoryFilters slug={slug} meta={meta} cat={cat} products={ordered} cats={cats} attrDefs={attrDefs} />
     </div>
   )
 }

@@ -17,7 +17,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const p = await getProductBySlug(params.slug)
+  const { slug } = await params
+  const p = await getProductBySlug(slug)
   if (!p) return { title: 'Producto no encontrado' }
   return {
     title: p.name,
@@ -37,7 +38,8 @@ const bottomFeatures = [
 ]
 
 export default async function ProductPage({ params }) {
-  const product = await getProductBySlug(params.slug)
+  const { slug } = await params
+  const product = await getProductBySlug(slug)
   if (!product) notFound()
   const all = await getAllProducts()
   const category = await getCategoryBySlug(product.category)
