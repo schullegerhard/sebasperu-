@@ -284,3 +284,16 @@ main { min-height: 60vh; }
   .page-title { font-size: 22px; }
   .pd-price { font-size: 26px; }
 }
+
+/* ===== Streaming skeletons (Core Web Vitals: contenido inmediato) ===== */
+.sk { background: linear-gradient(100deg, #eef1f6 30%, #f7f9fc 50%, #eef1f6 70%); background-size: 200% 100%; animation: sk-shine 1.2s ease-in-out infinite; border-radius: 10px; }
+@keyframes sk-shine { to { background-position: -200% 0; } }
+.sk-crumb { height: 14px; width: 260px; max-width: 60%; margin: 16px 0; border-radius: 6px; }
+.sk-gallery { width: 100%; aspect-ratio: 1/1; max-height: 420px; }
+.sk-line { height: 16px; margin-bottom: 12px; }
+.sk-line.w40 { width: 40%; } .sk-line.w60 { width: 60%; } .sk-line.w90 { width: 90%; }
+.sk-price { height: 34px; width: 160px; margin: 18px 0; }
+.sk-btn { height: 46px; width: 100%; max-width: 320px; border-radius: 10px; }
+.sk-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.sk-card { height: 300px; }
+@media (max-width: 900px) { .sk-grid { grid-template-columns: repeat(2, 1fr); } }
