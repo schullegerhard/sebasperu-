@@ -145,21 +145,32 @@ function Carousel({ children, className = '' }) {
 }
 
 /* ---------------- CATEGORÍAS (scroller horizontal) ---------------- */
-const Categorias = () => (
-  <section className="section-white">
-    <div className="container">
-      <h2 className="home-h2">Categorías</h2>
-      <Carousel className="cat-car">
-        {homeCategories.map((c) => (
-          <Link className="cat-tile" key={c.name} to={c.to}>
-            <div className="cat-tile-thumb"><ProductImage image={c.image} style={COVER} /></div>
-            <b>{c.name}</b>
-          </Link>
-        ))}
-      </Carousel>
-    </div>
-  </section>
-)
+const isRealImg = (s) => typeof s === 'string' && (s.startsWith('data:') || s.startsWith('http') || s.startsWith('/uploads'))
+const Categorias = () => {
+  const apiCats = useApiCategories()
+  // Usa la imagen real asignada a la categoría en el panel (Admin → Categorías);
+  // si no hay, cae a la foto del diseño.
+  const imgFor = (c) => {
+    const slug = c.to.startsWith('/categoria/') ? c.to.slice('/categoria/'.length) : null
+    const ac = slug && apiCats.find((x) => x.slug === slug)
+    return ac && isRealImg(ac.image) ? ac.image : c.image
+  }
+  return (
+    <section className="section-white">
+      <div className="container">
+        <h2 className="home-h2">Categorías</h2>
+        <Carousel className="cat-car">
+          {homeCategories.map((c) => (
+            <Link className="cat-tile" key={c.name} to={c.to}>
+              <div className="cat-tile-thumb"><ProductImage image={imgFor(c)} style={COVER} /></div>
+              <b>{c.name}</b>
+            </Link>
+          ))}
+        </Carousel>
+      </div>
+    </section>
+  )
+}
 
 /* ---------------- OFERTAS FLASH (con countdown) ---------------- */
 function useCountdown(initial = { h: 3, m: 45, s: 22 }) {
@@ -245,7 +256,7 @@ const ProductSection = ({ title, items, to }) => (
         <h2 className="home-h2">{title}</h2>
         <Link className="psec-all" to={to}>Ver todos <ChevronRight size={15} /></Link>
       </div>
-      <div className="pcard-grid">{items.map((p) => <ProductCardHome key={p.id} p={p} />)}</div>
+      <Carousel className="pcard-car">{items.map((p) => <ProductCardHome key={p.id} p={p} />)}</Carousel>
     </div>
   </section>
 )

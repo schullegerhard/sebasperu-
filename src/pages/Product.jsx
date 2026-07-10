@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ProductImage } from '../components/imageMap.jsx'
-import { Truck, Zap, MapPin, Shield, Heart, Cart, Star, Plus, ChevronRight } from '../components/Icons.jsx'
+import { Truck, Zap, MapPin, Shield, Cart, Star, Plus, ChevronRight } from '../components/Icons.jsx'
 import { getProduct, getCategory, products, peso } from '../data/catalog.js'
 import { findStoreProduct, storeByCategory, productSlug } from '../data/storefront.js'
 import { useStore } from '../context/StoreContext.jsx'
@@ -92,7 +92,6 @@ export default function Product() {
   const apiCats = useApiCategories()
   const [qty, setQty] = useState(1)
   const [tab, setTab] = useState('desc')
-  const [wished, setWished] = useState(false)
   const [added, setAdded] = useState(false)
   const [imgIdx, setImgIdx] = useState(0)
 
@@ -164,7 +163,6 @@ export default function Product() {
           <div className="pdp-stage">
             <ProductImage image={p.images[imgIdx] || p.image} tint={p.tint} label={p.label} brand={p.brand} style={CONTAIN} />
             {hasOff && <span className="pdp-disc">-{discount}%</span>}
-            <button className={`pdp-wish ${wished ? 'on' : ''}`} onClick={() => setWished((w) => !w)}><Heart size={12} /> Lista de deseos</button>
           </div>
 
           {/* Info */}

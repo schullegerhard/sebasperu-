@@ -532,7 +532,7 @@
 .ccard-price .price-now { color: var(--red2); font-size: 18px; font-weight: 800; }
 .ccard-stock { color: var(--green); font-size: 12.5px; font-weight: 600; margin-bottom: 12px; }
 .ccard-actions { display: flex; gap: 8px; margin-top: auto; }
-.ccard-add { flex: 1; height: 40px; background: var(--blue); color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.ccard-add { flex: 1; height: 46px; background: var(--blue); color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 .ccard-add:hover { background: var(--blue-dark); } .ccard-add:disabled { opacity: .5; }
 .ccard-eye { width: 46px; height: 40px; border: 1.5px solid var(--line); border-radius: 8px; color: #475569; display: flex; align-items: center; justify-content: center; }
 .ccard-eye:hover { border-color: var(--blue); color: var(--blue); }
@@ -649,6 +649,10 @@
 .psec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .psec-all { display: inline-flex; align-items: center; gap: 4px; color: var(--blue); font-weight: 700; font-size: 14px; }
 .pcard-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+/* Secciones de productos como carrusel horizontal (con flechas). */
+.pcard-car { gap: 16px; }
+.pcard-car .pcard { flex: 0 0 244px; }
+@media (max-width: 560px) { .pcard-car .pcard { flex: 0 0 72%; } }
 
 /* Tarjeta de producto */
 .pcard { position: relative; background: #fff; border: 1px solid #e8ecf3; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
@@ -670,7 +674,7 @@
 .pcard-price { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; }
 .pcard-price .now { font-size: 20px; font-weight: 800; color: #0f172a; }
 .pcard-price .old { font-size: 13px; color: #98a2b3; text-decoration: line-through; }
-.pcard-add { margin-top: 12px; width: 100%; padding: 8px 0; border-radius: 8px; background: var(--blue); color: #fff; font-weight: 700; font-size: 14px; line-height: 1.25; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.pcard-add { margin-top: 12px; width: 100%; padding: 13px 0; border-radius: 9px; background: var(--blue); color: #fff; font-weight: 700; font-size: 14.5px; line-height: 1.25; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .pcard-add:hover { background: var(--blue-dark); }
 
 /* ============ Ofertas Flash ============ */

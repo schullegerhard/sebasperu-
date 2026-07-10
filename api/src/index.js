@@ -23,6 +23,9 @@ const origins = (process.env.CORS_ORIGIN || '*').split(',').map((s) => s.trim())
 app.use(cors({ origin: origins.includes('*') ? true : origins }))
 app.use(express.json({ limit: '8mb' })) // permite imágenes de producto (data URL) en el cuerpo
 app.use(morgan('dev'))
+// Las respuestas de la API nunca se cachean: así los cambios del panel (banners,
+// productos, categorías, páginas) se ven en la tienda al recargar, sin caché stale.
+app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next() })
 
 const ok = (res, data) => res.json(data)
 const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((e) => { console.error(e); res.status(500).json({ error: e.message }) })
