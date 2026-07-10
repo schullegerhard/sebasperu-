@@ -308,7 +308,7 @@ export default function Product() {
                 return (
                   <div className="pdp-rel-card" key={r.id}>
                     <Link to={`/producto/${rslug}`} className="pdp-rel-thumb">
-                      <ProductImage image={r.image} tint={r.tint} label={r.label} seed={r.id} brand={r.brand} style={COVER} />
+                      <ProductImage image={r.image} tint={r.tint} label={r.label} seed={r.id} brand={r.brand} style={CONTAIN} />
                       {d > 0 && <span className="pdp-rel-disc">-{d}%</span>}
                     </Link>
                     <div className="pdp-rel-body">

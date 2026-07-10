@@ -893,8 +893,8 @@
 .pdp-related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .pdp-rel-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; background: #fff; }
 .pdp-rel-card:hover { box-shadow: var(--shadow); }
-.pdp-rel-thumb { position: relative; height: 180px; display: block; overflow: hidden; }
-.pdp-rel-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pdp-rel-thumb { position: relative; height: 230px; display: block; overflow: hidden; background: #fff; padding: 12px; }
+.pdp-rel-thumb img { width: 100%; height: 100%; object-fit: contain; }
 .pdp-rel-disc { position: absolute; top: 8px; left: 8px; background: #ff4300; color: #fff; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; }
 .pdp-rel-body { padding: 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .pdp-rel-brand { font-size: 10px; font-weight: 900; color: var(--blue); text-transform: uppercase; }
