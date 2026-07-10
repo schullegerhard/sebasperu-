@@ -16,11 +16,15 @@ import {
   listPages, savePage, removePage,
 } from './store.js'
 import { login, requireAuth, requireRole } from './auth.js'
+import { loginRateLimit, recordLoginResult, securityHeaders } from './security.js'
 
 const app = express()
+app.set('trust proxy', 1) // detrás de proxy (Render/ngrok): req.ip = IP real del cliente
+app.disable('x-powered-by')
 // CORS configurable: CORS_ORIGIN="https://tu-tienda.com,https://admin.tu-tienda.com" o "*".
 const origins = (process.env.CORS_ORIGIN || '*').split(',').map((s) => s.trim())
 app.use(cors({ origin: origins.includes('*') ? true : origins }))
+app.use(securityHeaders) // cabeceras de seguridad en todas las respuestas
 app.use(express.json({ limit: '8mb' })) // permite imágenes de producto (data URL) en el cuerpo
 app.use(morgan('dev'))
 // Las respuestas de la API nunca se cachean: así los cambios del panel (banners,
@@ -32,9 +36,10 @@ const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((e) => { 
 
 /* --------------------------- salud + auth --------------------------- */
 app.get('/api/health', (req, res) => res.json({ status: 'ok', db: usingDb ? 'postgres' : 'memory', time: new Date().toISOString() }))
-app.post('/api/auth/login', wrap(async (req, res) => {
+app.post('/api/auth/login', loginRateLimit, wrap(async (req, res) => {
   const { email, password } = req.body || {}
   const r = await login(email, password)
+  recordLoginResult(req, !!r) // cuenta el intento (bloqueo por fuerza bruta)
   return r ? ok(res, r) : res.status(401).json({ error: 'Credenciales inválidas' })
 }))
 app.get('/api/me', requireAuth, (req, res) => res.json(req.user))
