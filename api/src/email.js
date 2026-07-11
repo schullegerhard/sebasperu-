@@ -38,6 +38,32 @@ function orderHtml(order) {
   </div>`
 }
 
+function shell(title, bodyHtml) {
+  return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#0f1c2e">
+    <div style="background:#1a56ff;color:#fff;padding:22px 24px;border-radius:12px 12px 0 0"><h1 style="margin:0;font-size:20px">SEBASTPERU</h1></div>
+    <div style="border:1px solid #e8ecf3;border-top:none;border-radius:0 0 12px 12px;padding:24px">${bodyHtml}</div>
+  </div>`
+}
+
+async function send(to, subject, html) {
+  const t = transport()
+  if (!to || to === '—') return false
+  if (!t) { console.log(`ℹ️  Email no configurado (SMTP_USER/PASS) — se omite: ${subject}`); return false }
+  try {
+    await t.sendMail({ from: process.env.MAIL_FROM || `SebasPeru <${process.env.SMTP_USER}>`, to, subject, html })
+    console.log(`📧 Enviado a ${to}: ${subject}`)
+    return true
+  } catch (e) { console.warn('⚠️  Error enviando email:', e.message); return false }
+}
+
+// Correo de bienvenida al registrarse.
+export async function sendWelcome(customer) {
+  return send(customer?.email, '¡Bienvenido a SebasPeru!', shell('Bienvenido', `
+    <h2 style="font-size:18px;margin:0 0 6px">¡Hola, ${customer?.name || ''}!</h2>
+    <p style="color:#475569;margin:0 0 16px">Tu cuenta en <b>SebasPeru</b> fue creada con éxito. Ya puedes comprar más rápido y seguir tus pedidos desde <b>Mi cuenta</b>.</p>
+    <p style="color:#64748b;font-size:12.5px;margin:0">¿Dudas? Escríbenos a ventas@sebasperu.com o por WhatsApp al 925 552 042.</p>`))
+}
+
 export async function sendOrderConfirmation(order) {
   const t = transport()
   const to = order?.email

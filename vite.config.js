@@ -6,7 +6,9 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
-    allowedHosts: true
+    allowedHosts: true,
+    // En desarrollo, /api se redirige a la API Express (mismo origen relativo).
+    proxy: { '/api': 'http://localhost:4000' }
   },
   preview: {
     port: 4173,

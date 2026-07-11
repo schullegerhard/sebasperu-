@@ -20,7 +20,7 @@ import {
 import compression from 'compression'
 import { login, requireAuth, requireRole, customerToken, requireCustomer } from './auth.js'
 import { loginRateLimit, recordLoginResult, securityHeaders } from './security.js'
-import { sendOrderConfirmation } from './email.js'
+import { sendOrderConfirmation, sendWelcome } from './email.js'
 import { mpConfigured, createPreference, getPayment } from './mercadopago.js'
 
 // Hash señuelo para login de cliente con tiempo constante (evita enumeración).
@@ -63,6 +63,7 @@ app.post('/api/account/register', loginRateLimit, wrap(async (req, res) => {
   if (existing?.password_hash) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo. Inicia sesión.' })
   const c = await createCustomer({ name: String(name).trim(), email, phone, password_hash: bcrypt.hashSync(String(password), 10) })
   const customer = { id: c.id, name: c.name, email: c.email }
+  sendWelcome(customer).catch(() => {}) // correo de bienvenida (no bloquea)
   return res.status(201).json({ token: customerToken(customer), customer })
 }))
 app.post('/api/account/login', loginRateLimit, wrap(async (req, res) => {

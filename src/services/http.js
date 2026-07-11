@@ -1,8 +1,10 @@
-// Cliente HTTP del administrador → API Express (con token JWT).
-// - undefined (sin .env)  → localhost:4000 (modo dev típico)
-// - '' (vacío, build prod) → relativo, mismo origen (la API sirve el front-end)
+// Cliente HTTP → API Express (con token JWT).
+// Por DEFECTO usa rutas RELATIVAS (mismo origen): la API sirve el front-end, y
+// en `vite dev` el proxy de vite.config redirige /api → localhost:4000. Así el
+// sitio desplegado (túnel/Render) llama a su propio dominio, no al localhost del
+// visitante. Solo define VITE_API_URL si la API está en OTRO origen.
 const raw = import.meta.env.VITE_API_URL
-const BASE = raw === undefined ? 'http://localhost:4000' : raw
+const BASE = raw == null ? '' : raw
 
 const token = () => localStorage.getItem('admin_token')
 
