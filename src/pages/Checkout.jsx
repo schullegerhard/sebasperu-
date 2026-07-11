@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ProductImage } from '../components/imageMap.jsx'
 import { ShieldCheck, Lock, Truck, MapPin, BadgeCheck, Headset, FileText, Check } from '../components/Icons.jsx'
@@ -6,13 +6,13 @@ import { useStore, COUPONS } from '../context/StoreContext.jsx'
 import { peso } from '../data/catalog.js'
 import { useSeo } from '../lib/seo.js'
 import { track } from '../lib/analytics.js'
-import { Orders } from '../services/api.js'
+import { Orders, Pay } from '../services/api.js'
 import { getCustomer } from '../services/account.js'
 
 const PAYMENTS = [
-  { id: 'contraentrega', label: 'Pago contra entrega', desc: 'Paga en efectivo al recibir tu pedido.', icon: '💵', rec: true },
+  { id: 'mercadopago', label: 'Mercado Pago', desc: 'Paga con tarjeta, Yape o saldo de forma segura.', icon: '🔷', rec: true, online: true },
+  { id: 'contraentrega', label: 'Pago contra entrega', desc: 'Paga en efectivo al recibir tu pedido.', icon: '💵' },
   { id: 'transferencia', label: 'Transferencia bancaria', desc: 'Realiza tu pago a nuestras cuentas bancarias.', icon: '🏛️' },
-  { id: 'tarjeta', label: 'Tarjeta de crédito / débito', desc: 'Paga de forma segura con tu tarjeta.', icon: '💳', cards: true },
   { id: 'yape', label: 'Yape / Plin', desc: 'Paga fácil y rápido desde tu celular.', icon: '📱', yape: true },
 ]
 
@@ -53,7 +53,17 @@ export default function Checkout() {
   const [done, setDone] = useState(false)
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [mpAvailable, setMpAvailable] = useState(false)
   useSeo({ title: 'Checkout', path: '/checkout', description: 'Finaliza tu compra en SebasPeru de forma rápida y segura.' })
+
+  // ¿Está Mercado Pago disponible? Si sí, se ofrece y queda por defecto. Además,
+  // al volver del pago (?status=success) se confirma el pedido y se vacía el carrito.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('status') === 'success') { clearCart(); setDone(true); window.history.replaceState({}, '', '/checkout'); return }
+    Pay.config().then((c) => { if (c?.mercadopago) { setMpAvailable(true); setData((d) => ({ ...d, payment: 'mercadopago' })) } }).catch(() => {})
+  }, [])
+  const payments = PAYMENTS.filter((p) => p.id !== 'mercadopago' || mpAvailable)
 
   const set = (k, v) => setData((d) => {
     const next = { ...d, [k]: v }
@@ -103,14 +113,27 @@ export default function Checkout() {
     if (submitting) return
     setSubmitting(true)
     track('purchase', { value: total, payment: data.payment, coupon: applied })
+    const region = data.delivery === 'tienda' ? 'Retiro en tienda' : 'Lima'
+    const items = cart.map((i) => ({ name: i.name, qty: i.qty, price: i.price }))
+    const customer = `${data.name} ${data.lastName}`.trim() || 'Cliente invitado'
+    const email = data.email.trim() || '—'
+
+    // Mercado Pago: crea el pedido y redirige a la pasarela (Checkout Pro).
+    if (data.payment === 'mercadopago') {
+      try {
+        const { init_point } = await Pay.mercadopago({ customer, email, total, region, items })
+        if (init_point) { window.location.href = init_point; return }
+      } catch (err) {
+        setSubmitting(false)
+        setErrors({ pay: err.message || 'No se pudo iniciar el pago con Mercado Pago.' })
+        requestAnimationFrame(() => document.querySelector('.co-err')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+        return
+      }
+    }
+
+    // Otros métodos: registra el pedido (el correo de confirmación se envía en la API).
     try {
-      await Orders.create({
-        customer: `${data.name} ${data.lastName}`.trim() || 'Cliente invitado',
-        email: data.email.trim() || '—',
-        total, payment: PAYMENTS.find((p) => p.id === data.payment)?.label || data.payment,
-        region: data.delivery === 'tienda' ? 'Retiro en tienda' : 'Lima', date: '2026-07-01',
-        items: cart.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
-      })
+      await Orders.create({ customer, email, total, payment: PAYMENTS.find((p) => p.id === data.payment)?.label || data.payment, region, date: new Date().toISOString().slice(0, 10), items })
     } catch { /* la API puede no estar corriendo; no bloquea la compra */ }
     clearCart(); setDone(true); window.scrollTo(0, 0)
   }
@@ -222,7 +245,7 @@ export default function Checkout() {
               </>
             )}
             <div className="co2-pays">
-              {PAYMENTS.map((p) => (
+              {payments.map((p) => (
                 <label key={p.id} className={`co2-pay ${data.payment === p.id ? 'on' : ''}`}>
                   <input type="radio" name="pay" checked={data.payment === p.id} onChange={() => set('payment', p.id)} />
                   <span className="co2-pay-ic">{p.icon}</span>
@@ -266,6 +289,7 @@ export default function Checkout() {
 
           <div className="co2-safe"><span className="co2-safe-ic"><ShieldCheck size={22} /></span><div><b>Compra 100% segura</b><span>Tus datos y pago están protegidos en cada paso de tu compra.</span></div></div>
 
+          {errors.pay && <p className="co-err" style={{ marginBottom: 8 }}>{errors.pay}</p>}
           <button className="co2-pay-btn" onClick={pay} disabled={submitting}>{submitting ? 'Procesando…' : <>Pagar ahora <Lock size={16} /></>}</button>
           <p className="co2-terms">Al hacer clic en “Pagar ahora”, aceptas nuestros <Link to="/legal/terminos">Términos y condiciones</Link> y <Link to="/legal/privacidad">Política de privacidad</Link>.</p>
         </aside>

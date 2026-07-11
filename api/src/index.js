@@ -20,6 +20,8 @@ import {
 import compression from 'compression'
 import { login, requireAuth, requireRole, customerToken, requireCustomer } from './auth.js'
 import { loginRateLimit, recordLoginResult, securityHeaders } from './security.js'
+import { sendOrderConfirmation } from './email.js'
+import { mpConfigured, createPreference, getPayment } from './mercadopago.js'
 
 // Hash señuelo para login de cliente con tiempo constante (evita enumeración).
 const DUMMY_CUSTOMER_HASH = bcrypt.hashSync('customer-timing-guard', 10)
@@ -108,7 +110,42 @@ app.patch('/api/categories/:slug/move', requireAuth, requireRole(), wrap(async (
 app.post('/api/orders', wrap(async (req, res) => {
   const { customer, email, total, payment, region, date, items } = req.body || {}
   if (!total || !items) return res.status(400).json({ error: 'Faltan campos del pedido' })
-  res.status(201).json(await createOrder({ customer: customer || 'Invitado', email: email || '—', total, payment: payment || 'N/D', region: region || 'Lima', date: date || new Date().toISOString().slice(0, 10), items }))
+  const order = await createOrder({ customer: customer || 'Invitado', email: email || '—', total, payment: payment || 'N/D', region: region || 'Lima', date: date || new Date().toISOString().slice(0, 10), items })
+  sendOrderConfirmation(order).catch(() => {}) // correo de confirmación (no bloquea)
+  res.status(201).json(order)
+}))
+
+// ---- Pago con Mercado Pago (Checkout Pro) ----
+const publicBaseUrl = (req) => process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`
+// ¿Está configurado MP? (para que la tienda muestre u oculte la opción)
+app.get('/api/pay/config', (req, res) => res.json({ mercadopago: mpConfigured() }))
+app.post('/api/pay/mercadopago', wrap(async (req, res) => {
+  if (!mpConfigured()) return res.status(503).json({ error: 'Mercado Pago no está configurado (falta MP_ACCESS_TOKEN).' })
+  const { customer, email, total, items, region } = req.body || {}
+  if (!total || !items?.length) return res.status(400).json({ error: 'Faltan campos del pedido' })
+  const order = await createOrder({ customer: customer || 'Invitado', email: email || '—', total, payment: 'Mercado Pago', region: region || 'Lima', date: new Date().toISOString().slice(0, 10), items })
+  const base = publicBaseUrl(req)
+  const pref = await createPreference(order, {
+    success: `${base}/checkout?status=success&order=${order.id}`,
+    failure: `${base}/checkout?status=failure`,
+    notification: `${base}/api/pay/mercadopago/webhook`,
+  })
+  res.status(201).json({ init_point: pref.init_point, orderId: order.id })
+}))
+// Webhook de Mercado Pago: confirma el pago → marca Pagado + envía el correo.
+app.post('/api/pay/mercadopago/webhook', wrap(async (req, res) => {
+  res.sendStatus(200) // responder rápido; procesar luego
+  try {
+    const id = req.body?.data?.id || req.query['data.id'] || req.query.id
+    const type = req.body?.type || req.query.type || req.query.topic
+    if ((type === 'payment' || type === 'merchant_order') && id) {
+      const pay = await getPayment(id)
+      if (pay?.status === 'approved' && pay.external_reference) {
+        const order = await setOrderStatus(Number(pay.external_reference), 'Pagado')
+        if (order) sendOrderConfirmation(order).catch(() => {})
+      }
+    }
+  } catch (e) { console.warn('⚠️  Webhook MP:', e.message) }
 }))
 app.get('/api/orders', requireAuth, requireRole('Vendedor', 'Almacén', 'Soporte'), wrap(async (req, res) => ok(res, await listOrders())))
 app.patch('/api/orders/:id/status', requireAuth, requireRole('Almacén'), wrap(async (req, res) => ok(res, await setOrderStatus(Number(req.params.id), req.body.status))))

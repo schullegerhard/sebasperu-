@@ -28,6 +28,11 @@ export const Orders = {
 
 export const Customers = { list: () => http.get('/api/customers') }
 
+export const Pay = {
+  config: () => http.get('/api/pay/config'),
+  mercadopago: (order) => http.post('/api/pay/mercadopago', order),
+}
+
 export const Coupons = {
   list: () => http.get('/api/coupons'),
   save: (data) => (data.id ? http.put(`/api/coupons/${data.id}`, data) : http.post('/api/coupons', data)),
