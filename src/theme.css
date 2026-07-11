@@ -846,6 +846,15 @@
 .pdp-tab-head button.on { color: var(--blue); }
 .pdp-tab-head button.on::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--blue); }
 .pdp-tab-body { padding: 24px; }
+/* ===== Cuenta del cliente (mis pedidos) ===== */
+.account-dash { display: flex; flex-direction: column; gap: 16px; max-width: 860px; }
+.account-hello { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.account-hello h3 { font-size: 18px; font-weight: 800; color: #0f1c2e; }
+.account-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.account-orders { width: 100%; border-collapse: collapse; }
+.account-orders th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: #5a7090; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.account-orders td { padding: 12px 10px; border-bottom: 1px solid var(--line); font-size: 14px; color: #0f1c2e; }
+.account-orders tr:last-child td { border-bottom: none; }
 .pdp-loading { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 46vh; color: #5a7090; font-size: 15px; font-weight: 600; }
 .pdp-spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--blue); animation: pdp-spin .7s linear infinite; }
 @keyframes pdp-spin { to { transform: rotate(360deg); } }

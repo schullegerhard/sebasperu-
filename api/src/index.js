@@ -2,6 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
+import bcrypt from 'bcryptjs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, join } from 'node:path'
 import { existsSync } from 'node:fs'
@@ -10,14 +11,18 @@ import {
   listProducts, getProductBySlug, productsByCategory, createProduct, updateProduct, removeProduct, setStock,
   listCategories, getCategoryBySlug, createCategory, updateCategory, removeCategory, addSubcategory, removeSubcategory, moveCategory,
   listOrders, createOrder, setOrderStatus,
-  listCustomers, listCoupons, saveCoupon, removeCoupon, toggleCoupon, getSettings, saveSettings,
+  listCustomers, findCustomerByEmail, createCustomer, ordersByEmail,
+  listCoupons, saveCoupon, removeCoupon, toggleCoupon, getSettings, saveSettings,
   listAttributes, saveAttribute, removeAttribute,
   listBanners, saveBanner, removeBanner, toggleBanner, moveBanner,
   listPages, savePage, removePage,
 } from './store.js'
 import compression from 'compression'
-import { login, requireAuth, requireRole } from './auth.js'
+import { login, requireAuth, requireRole, customerToken, requireCustomer } from './auth.js'
 import { loginRateLimit, recordLoginResult, securityHeaders } from './security.js'
+
+// Hash señuelo para login de cliente con tiempo constante (evita enumeración).
+const DUMMY_CUSTOMER_HASH = bcrypt.hashSync('customer-timing-guard', 10)
 
 const app = express()
 app.set('trust proxy', 1) // detrás de proxy (Render/ngrok): req.ip = IP real del cliente
@@ -45,6 +50,30 @@ app.post('/api/auth/login', loginRateLimit, wrap(async (req, res) => {
   return r ? ok(res, r) : res.status(401).json({ error: 'Credenciales inválidas' })
 }))
 app.get('/api/me', requireAuth, (req, res) => res.json(req.user))
+
+// ---- Cuentas de CLIENTE (tienda): registro, login, perfil y pedidos ----
+app.post('/api/account/register', loginRateLimit, wrap(async (req, res) => {
+  const { name, email, password, phone } = req.body || {}
+  if (!name || !String(name).trim()) return res.status(400).json({ error: 'Ingresa tu nombre.' })
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim())) return res.status(400).json({ error: 'Correo inválido.' })
+  if (!password || String(password).length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' })
+  const existing = await findCustomerByEmail(email)
+  if (existing?.password_hash) return res.status(409).json({ error: 'Ya existe una cuenta con ese correo. Inicia sesión.' })
+  const c = await createCustomer({ name: String(name).trim(), email, phone, password_hash: bcrypt.hashSync(String(password), 10) })
+  const customer = { id: c.id, name: c.name, email: c.email }
+  return res.status(201).json({ token: customerToken(customer), customer })
+}))
+app.post('/api/account/login', loginRateLimit, wrap(async (req, res) => {
+  const { email, password } = req.body || {}
+  const c = await findCustomerByEmail(email)
+  const okPass = bcrypt.compareSync(String(password || ''), c?.password_hash || DUMMY_CUSTOMER_HASH)
+  recordLoginResult(req, !!(c?.password_hash && okPass))
+  if (!c || !c.password_hash || !okPass) return res.status(401).json({ error: 'Correo o contraseña incorrectos.' })
+  const customer = { id: c.id, name: c.name, email: c.email }
+  return ok(res, { token: customerToken(customer), customer })
+}))
+app.get('/api/account/me', requireCustomer, (req, res) => res.json({ id: req.customer.id, name: req.customer.name, email: req.customer.email }))
+app.get('/api/account/orders', requireCustomer, wrap(async (req, res) => ok(res, await ordersByEmail(req.customer.email))))
 
 /* ----------------------- PRODUCTOS (lectura pública) ----------------------- */
 app.get('/api/products', wrap(async (req, res) => ok(res, await listProducts())))

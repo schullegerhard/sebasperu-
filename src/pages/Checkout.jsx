@@ -7,6 +7,7 @@ import { peso } from '../data/catalog.js'
 import { useSeo } from '../lib/seo.js'
 import { track } from '../lib/analytics.js'
 import { Orders } from '../services/api.js'
+import { getCustomer } from '../services/account.js'
 
 const PAYMENTS = [
   { id: 'contraentrega', label: 'Pago contra entrega', desc: 'Paga en efectivo al recibir tu pedido.', icon: '💵', rec: true },
@@ -35,8 +36,9 @@ const Seg = ({ value, onChange, options }) => (
 
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useStore()
+  const acct = getCustomer() // si hay sesión de cliente, se precargan sus datos
   const [data, setData] = useState({
-    email: '',
+    email: acct?.email || '',
     delivery: 'domicilio', // domicilio | tienda
     name: '', lastName: '', doc: '', address: '', reference: '',
     recipient: 'yo', // yo | otra

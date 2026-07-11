@@ -19,6 +19,21 @@ export async function login(email, password) {
   return { token, user: payload }
 }
 
+// ---- Cuentas de CLIENTE (tienda) — token separado del panel (type: customer) ----
+export function customerToken(c) {
+  return jwt.sign({ id: c.id, name: c.name, email: c.email, type: 'customer' }, SECRET, { expiresIn: '30d', issuer: 'sebasperu' })
+}
+export function requireCustomer(req, res, next) {
+  const h = req.headers.authorization || ''
+  const token = h.startsWith('Bearer ') ? h.slice(7) : null
+  if (!token) return res.status(401).json({ error: 'No autenticado' })
+  try {
+    const u = jwt.verify(token, SECRET)
+    if (u.type !== 'customer') return res.status(401).json({ error: 'Sesión inválida' })
+    req.customer = u; next()
+  } catch { res.status(401).json({ error: 'Sesión inválida o expirada' }) }
+}
+
 // Middleware: exige un Bearer token válido.
 export function requireAuth(req, res, next) {
   const h = req.headers.authorization || ''

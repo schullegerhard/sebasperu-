@@ -28,12 +28,13 @@ CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
 
 CREATE TABLE IF NOT EXISTS customers (
-  id     SERIAL PRIMARY KEY,
-  name   TEXT NOT NULL,
-  email  TEXT UNIQUE NOT NULL,
-  phone  TEXT,
-  type   TEXT DEFAULT 'Persona',
-  since  DATE DEFAULT CURRENT_DATE
+  id            SERIAL PRIMARY KEY,
+  name          TEXT NOT NULL,
+  email         TEXT UNIQUE NOT NULL,
+  phone         TEXT,
+  password_hash TEXT,          -- cuenta de cliente (registro/login en la tienda)
+  type          TEXT DEFAULT 'Persona',
+  since          DATE DEFAULT CURRENT_DATE
 );
 
 CREATE TABLE IF NOT EXISTS orders (

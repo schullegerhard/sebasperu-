@@ -9,6 +9,7 @@ import { products, peso } from '../data/catalog.js'
 import { MENU_TREE } from '../data/menu.js'
 import { useProductOverrides, useExtraProducts, applyOverride, useStorefrontProducts, useHasRealCatalog } from '../context/ProductOverrides.jsx'
 import { useStore } from '../context/StoreContext.jsx'
+import { getCustomer } from '../services/account.js'
 import { track } from '../lib/analytics.js'
 
 export const Logo = ({ footer, variant = 'inner' }) => (
@@ -103,6 +104,12 @@ function PredictiveSearch({ variant = 'inner' }) {
 
 const MainHeader = ({ variant = 'inner', onMenu }) => {
   const { cartCount, cartTotal, openCart } = useStore()
+  const [customer, setCustomer] = useState(() => getCustomer())
+  useEffect(() => {
+    const sync = () => setCustomer(getCustomer())
+    window.addEventListener('customer-auth', sync)
+    return () => window.removeEventListener('customer-auth', sync)
+  }, [])
   return (
     <header className="header">
       <div className="container">
@@ -110,11 +117,17 @@ const MainHeader = ({ variant = 'inner', onMenu }) => {
         <Logo variant={variant} />
         <PredictiveSearch variant={variant} />
         <div className="header-actions">
-          <Link to="/cuenta" className="acc-link">
-            <small>¿Ya tienes cuenta?</small>
-            <b>Inicia sesión</b>
-          </Link>
-          <Link to="/cuenta" className="btn-register">Regístrate</Link>
+          {customer ? (
+            <Link to="/cuenta" className="acc-link"><small>Mi cuenta</small><b>Hola, {customer.name.split(' ')[0]}</b></Link>
+          ) : (
+            <>
+              <Link to="/cuenta" className="acc-link">
+                <small>¿Ya tienes cuenta?</small>
+                <b>Inicia sesión</b>
+              </Link>
+              <Link to="/cuenta" className="btn-register">Regístrate</Link>
+            </>
+          )}
           <button type="button" onClick={openCart} className="cart-action">
             <span className="cart-ic">
               <Cart size={20} />

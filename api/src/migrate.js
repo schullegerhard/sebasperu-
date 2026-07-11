@@ -13,6 +13,8 @@ const schemaSql = readFileSync(resolve(here, '../db/schema.sql'), 'utf8')
 
 export async function ensureSchema(pool) {
   await pool.query(schemaSql) // CREATE TABLE IF NOT EXISTS … (idempotente)
+  // Columnas nuevas en tablas existentes (idempotente): cuenta de cliente.
+  await pool.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS password_hash TEXT')
   const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM products')
   if (rows[0].n === 0) { await seedAll(pool); console.log('🌱 Base de datos sembrada (catálogo + usuarios).') }
   // Siembra las páginas de contenido si la tabla está vacía (idempotente): así

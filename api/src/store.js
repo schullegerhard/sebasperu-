@@ -216,6 +216,35 @@ export async function listCustomers() {
   if (usingDb) return (await pool.query('SELECT * FROM customers ORDER BY id')).rows
   return mem.customers
 }
+// Cuenta de cliente (registro/login en la tienda).
+export async function findCustomerByEmail(email) {
+  const e = String(email || '').trim().toLowerCase()
+  if (!e) return null
+  if (usingDb) return (await pool.query('SELECT * FROM customers WHERE lower(email)=$1', [e])).rows[0] || null
+  return mem.customers.find((c) => (c.email || '').toLowerCase() === e) || null
+}
+export async function createCustomer({ name, email, phone, password_hash }) {
+  const e = String(email || '').trim().toLowerCase()
+  if (usingDb) {
+    // Si el correo ya existe (p. ej. creado por el panel) sin contraseña, la fija.
+    const r = await pool.query(
+      `INSERT INTO customers (name, email, phone, password_hash) VALUES ($1,$2,$3,$4)
+       ON CONFLICT (email) DO UPDATE SET name=EXCLUDED.name, phone=COALESCE(EXCLUDED.phone, customers.phone),
+         password_hash=COALESCE(customers.password_hash, EXCLUDED.password_hash) RETURNING *`,
+      [name, e, phone || null, password_hash])
+    return r.rows[0]
+  }
+  const existing = mem.customers.find((c) => (c.email || '').toLowerCase() === e)
+  if (existing) { if (!existing.password_hash) existing.password_hash = password_hash; return existing }
+  const c = { id: ++mem.cseq, name, email: e, phone: phone || '', password_hash, type: 'Persona', since: new Date(0).toISOString().slice(0, 10) }
+  mem.customers.push(c); return c
+}
+// Pedidos de un cliente (por correo).
+export async function ordersByEmail(email) {
+  const e = String(email || '').trim().toLowerCase()
+  if (usingDb) return (await pool.query('SELECT * FROM orders WHERE lower(email)=$1 ORDER BY id DESC', [e])).rows
+  return mem.orders.filter((o) => (o.email || '').toLowerCase() === e).reverse()
+}
 
 /* ============================== CUPONES ============================== */
 export async function listCoupons() {
