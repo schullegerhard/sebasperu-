@@ -28,7 +28,15 @@ export async function generateMetadata({ params }) {
   const c = COPY[page]
   const title = managed?.title || c?.title
   if (!title) return { title: 'Legal' }
-  return { title, alternates: { canonical: `/legal/${page}` }, openGraph: { title, url: `${ORIGIN}/legal/${page}` } }
+  // Descripción dinámica a partir del contenido de la página (HTML gestionado o
+  // el texto por defecto), recortada para el snippet de buscadores.
+  const raw = managed?.body ? managed.body.replace(/<[^>]+>/g, ' ') : (c?.body?.join(' ') || '')
+  const description = raw.replace(/\s+/g, ' ').trim().slice(0, 155)
+  return {
+    title, description,
+    alternates: { canonical: `/legal/${page}` },
+    openGraph: { title, description, url: `${ORIGIN}/legal/${page}` },
+  }
 }
 
 export default async function Legal({ params }) {
