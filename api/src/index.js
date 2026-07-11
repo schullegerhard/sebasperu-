@@ -15,6 +15,7 @@ import {
   listBanners, saveBanner, removeBanner, toggleBanner, moveBanner,
   listPages, savePage, removePage,
 } from './store.js'
+import compression from 'compression'
 import { login, requireAuth, requireRole } from './auth.js'
 import { loginRateLimit, recordLoginResult, securityHeaders } from './security.js'
 
@@ -23,6 +24,7 @@ app.set('trust proxy', 1) // detrás de proxy (Render/ngrok): req.ip = IP real d
 app.disable('x-powered-by')
 // CORS configurable: CORS_ORIGIN="https://tu-tienda.com,https://admin.tu-tienda.com" o "*".
 const origins = (process.env.CORS_ORIGIN || '*').split(',').map((s) => s.trim())
+app.use(compression()) // gzip: reduce el tamaño de transferencia (JSON/HTML)
 app.use(cors({ origin: origins.includes('*') ? true : origins }))
 app.use(securityHeaders) // cabeceras de seguridad en todas las respuestas
 app.use(express.json({ limit: '8mb' })) // permite imágenes de producto (data URL) en el cuerpo

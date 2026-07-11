@@ -78,9 +78,16 @@ export async function initStore() {
 export const getPool = () => pool
 
 /* ============================== PRODUCTOS ============================== */
+// Campos pesados (imágenes base64 y textos largos) que SOLO se necesitan en la
+// ficha del producto, no en el listado. Se omiten del listado para que
+// /api/products sea liviano y rápido (evita transferir megas de galerías).
+const HEAVY_FIELDS = ['gallery', 'images', 'longDesc', 'description', 'documents']
+const lightProduct = (p) => { const o = { ...p }; for (const k of HEAVY_FIELDS) delete o[k]; return o }
+
+// Listado LIVIANO (sin galerías/textos largos). La ficha usa getProductBySlug (completo).
 export async function listProducts() {
-  if (usingDb) return (await pool.query('SELECT data FROM products ORDER BY id')).rows.map((r) => r.data)
-  return mem.products
+  if (usingDb) return (await pool.query('SELECT data FROM products ORDER BY id')).rows.map((r) => lightProduct(r.data))
+  return mem.products.map(lightProduct)
 }
 export async function getProductBySlug(slug) {
   if (usingDb) return (await pool.query('SELECT data FROM products WHERE slug=$1', [slug])).rows[0]?.data || null

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { http } from '../services/http.js'
 import { ProductImage } from '../components/imageMap.jsx'
 import { Truck, Zap, MapPin, Shield, Cart, Star, Plus, ChevronRight } from '../components/Icons.jsx'
 import { getProduct, getCategory, products, peso } from '../data/catalog.js'
@@ -95,13 +96,27 @@ export default function Product() {
   const [tab, setTab] = useState('desc')
   const [added, setAdded] = useState(false)
   const [imgIdx, setImgIdx] = useState(0)
+  // El listado es liviano (sin galería/descripción larga para cargar rápido); la
+  // ficha pide el producto COMPLETO por slug y fusiona esos campos pesados.
+  const [full, setFull] = useState(null)
+  useEffect(() => {
+    let alive = true
+    setFull(null)
+    http.get(`/api/products/${encodeURIComponent(slug)}`).then((f) => { if (alive && f) setFull(f) }).catch(() => {})
+    return () => { alive = false }
+  }, [slug])
 
   // Con catálogo real (BD del cliente) se resuelve SOLO desde él (los productos
   // demo dejan de ser accesibles). Sin catálogo real, se usa el del diseño.
   const slugOf = (pp) => pp.slug || productSlug(pp.name)
-  const raw = hasReal
+  const raw0 = hasReal
     ? realCatalog.find((pp) => pp.slug === slug || productSlug(pp.name) === slug)
     : (findStoreProduct(slug) || getProduct(slug) || extras.find((pp) => pp.slug === slug))
+  // Fusiona los campos pesados del producto completo (galería, descripción larga)
+  // cuando llegan; mientras tanto se muestra la miniatura y datos básicos.
+  const raw = raw0 && full && (full.slug === slug || String(full.id) === String(raw0.id))
+    ? { ...raw0, gallery: full.gallery, images: full.images, longDesc: full.longDesc, description: full.description }
+    : (raw0 || (full && full.slug === slug ? full : null))
   const p = normalize(raw ? applyOverride(raw, overrides[raw.id]) : null)
   // "Podría interesarte": productos reales de la MISMA CATEGORÍA PRINCIPAL (se
   // sube por `parent` hasta el rubro raíz y se toman todos sus descendientes).
