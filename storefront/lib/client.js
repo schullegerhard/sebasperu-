@@ -33,3 +33,6 @@ export const myOrders = () => req('GET', '/api/account/orders', null, true)
 export const payConfig = () => req('GET', '/api/pay/config')
 export const createOrder = (order) => req('POST', '/api/orders', order)
 export const payMercadoPago = (order) => req('POST', '/api/pay/mercadopago', order)
+
+// Solicitud de cotización (empresas)
+export const sendQuote = (data) => req('POST', '/api/quote', data)

@@ -64,6 +64,22 @@ export async function sendWelcome(customer) {
     <p style="color:#64748b;font-size:12.5px;margin:0">¿Dudas? Escríbenos a ventas@sebasperu.com o por WhatsApp al 925 552 042.</p>`))
 }
 
+// Solicitud de cotización → llega al correo de la tienda (o QUOTE_TO).
+export async function sendQuote(q) {
+  const to = process.env.QUOTE_TO || process.env.SMTP_USER
+  const rows = [
+    ['Nombre', q.name], ['Empresa', q.company], ['RUC', q.ruc], ['Correo', q.email],
+    ['Teléfono', q.phone], ['Producto / SKU', q.product], ['Cantidad', q.qty],
+  ].filter(([, v]) => v && String(v).trim())
+  const html = shell('Cotización', `
+    <h2 style="font-size:18px;margin:0 0 12px">Nueva solicitud de cotización</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      ${rows.map(([k, v]) => `<tr><td style="padding:6px 0;color:#64748b;width:150px">${k}</td><td style="padding:6px 0;font-weight:600">${v}</td></tr>`).join('')}
+    </table>
+    ${q.message ? `<p style="margin:14px 0 0;color:#475569"><b>Mensaje:</b><br>${String(q.message).replace(/</g, '&lt;')}</p>` : ''}`)
+  return send(to, `Cotización — ${q.name || 'Cliente'}${q.company ? ' (' + q.company + ')' : ''}`, html)
+}
+
 export async function sendOrderConfirmation(order) {
   const t = transport()
   const to = order?.email

@@ -20,7 +20,7 @@ import {
 import compression from 'compression'
 import { login, requireAuth, requireRole, customerToken, requireCustomer } from './auth.js'
 import { loginRateLimit, recordLoginResult, securityHeaders } from './security.js'
-import { sendOrderConfirmation, sendWelcome } from './email.js'
+import { sendOrderConfirmation, sendWelcome, sendQuote } from './email.js'
 import { mpConfigured, createPreference, getPayment } from './mercadopago.js'
 
 // Hash señuelo para login de cliente con tiempo constante (evita enumeración).
@@ -74,6 +74,15 @@ app.post('/api/account/login', loginRateLimit, wrap(async (req, res) => {
   if (!c || !c.password_hash || !okPass) return res.status(401).json({ error: 'Correo o contraseña incorrectos.' })
   const customer = { id: c.id, name: c.name, email: c.email }
   return ok(res, { token: customerToken(customer), customer })
+}))
+// Solicitud de cotización (empresas): valida y envía por correo a la tienda.
+app.post('/api/quote', loginRateLimit, wrap(async (req, res) => {
+  const q = req.body || {}
+  if (q.website) return res.json({ ok: true }) // honeypot anti-spam: ignora en silencio
+  if (!String(q.name || '').trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(q.email || '').trim()) || !String(q.phone || '').trim())
+    return res.status(400).json({ error: 'Completa nombre, correo y teléfono.' })
+  sendQuote(q).catch(() => {})
+  res.status(201).json({ ok: true })
 }))
 app.get('/api/account/me', requireCustomer, (req, res) => res.json({ id: req.customer.id, name: req.customer.name, email: req.customer.email }))
 app.get('/api/account/orders', requireCustomer, wrap(async (req, res) => ok(res, await ordersByEmail(req.customer.email))))
