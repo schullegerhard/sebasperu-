@@ -1,5 +1,5 @@
 export const SITE = 'SebasPeru'
-export const ORIGIN = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.sebasperu.com'
+export const ORIGIN = process.env.NEXT_PUBLIC_SITE_URL || 'https://sebasperu.com'
 
 // Schema.org Product (JSON-LD) renderizado en el HTML servidor → rich results.
 export function productJsonLd(p) {

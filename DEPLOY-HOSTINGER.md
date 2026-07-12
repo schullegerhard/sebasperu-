@@ -20,12 +20,12 @@ Repositorio (Git)
 | **Framework** | Next.js (autodetectado) |
 | **Build** | `npm install && npm run build` |
 | **Start** | `npm start`  *(usa el PORT que asigna Hostinger)* |
-| **Dominio** | el principal, p. ej. `www.tudominio.com` |
+| **Dominio** | el principal, p. ej. `sebasperu.com` |
 
 **Variables de entorno:**
 ```
-NEXT_PUBLIC_API_URL=https://panel.tudominio.com     # URL pública de la API (App B)
-NEXT_PUBLIC_SITE_URL=https://www.tudominio.com      # dominio público (canonical/sitemap)
+NEXT_PUBLIC_API_URL=https://panel.sebasperu.com     # URL pública de la API (App B)
+NEXT_PUBLIC_SITE_URL=https://sebasperu.com      # dominio público (canonical/sitemap)
 ```
 
 ---
@@ -37,17 +37,17 @@ NEXT_PUBLIC_SITE_URL=https://www.tudominio.com      # dominio público (canonica
 | **Directorio raíz** | `/` (raíz del repo) |
 | **Build** | `npm install --include=dev && npm run build && npm install --prefix api` |
 | **Start** | `npm start`  *(= `node api/src/index.js`, usa el PORT de Hostinger)* |
-| **Dominio** | un subdominio, p. ej. `panel.tudominio.com` |
+| **Dominio** | un subdominio, p. ej. `panel.sebasperu.com` |
 
-> El panel queda en `https://panel.tudominio.com/admin`. Esta app también sirve
+> El panel queda en `https://panel.sebasperu.com/admin`. Esta app también sirve
 > `/api/*` (que consume la tienda Next.js) y una copia de la tienda en Vite.
 
 **Variables de entorno (mínimas):**
 ```
 DATABASE_URL=postgresql://...supabase...       # tu cadena de Supabase
 JWT_SECRET=<un-secreto-largo-y-aleatorio>
-CORS_ORIGIN=https://www.tudominio.com          # permite que la tienda llame a la API
-PUBLIC_URL=https://panel.tudominio.com         # back_urls/webhook de Mercado Pago
+CORS_ORIGIN=https://sebasperu.com          # permite que la tienda llame a la API
+PUBLIC_URL=https://panel.sebasperu.com         # back_urls/webhook de Mercado Pago
 
 # Correo (Gmail → contraseña de aplicación)
 SMTP_HOST=smtp.gmail.com
@@ -71,10 +71,10 @@ MP_ACCESS_TOKEN=<tu-access-token>
 ## Pasos resumidos
 
 1. Sube el repo a Git (ya está).
-2. En Hostinger, crea **App B** (raíz `/`) con las variables y el build/start de arriba → asígnale `panel.tudominio.com`.
-3. Crea **App A** (raíz `storefront`) con sus dos variables → asígnale `www.tudominio.com`.
-4. Verifica: `https://panel.tudominio.com/admin` (panel) y `https://www.tudominio.com` (tienda SEO).
-5. Configura el **webhook de Mercado Pago** hacia `https://panel.tudominio.com/api/pay/mercadopago/webhook`.
+2. En Hostinger, crea **App B** (raíz `/`) con las variables y el build/start de arriba → asígnale `panel.sebasperu.com`.
+3. Crea **App A** (raíz `storefront`) con sus dos variables → asígnale `sebasperu.com`.
+4. Verifica: `https://panel.sebasperu.com/admin` (panel) y `https://sebasperu.com` (tienda SEO).
+5. Configura el **webhook de Mercado Pago** hacia `https://panel.sebasperu.com/api/pay/mercadopago/webhook`.
 
 ## Arquitectura (resuelta)
 
@@ -86,5 +86,5 @@ correos (registro y confirmación). → **App A es el sitio público principal**
 (que consume App A) y el panel en `/admin`. Los clientes NO usan App B directamente.
 
 Para que App A (navegador) pueda llamar a la API de App B, en **App B** define
-`CORS_ORIGIN=https://www.tudominio.com`. En **App A** define
-`NEXT_PUBLIC_API_URL=https://panel.tudominio.com`.
+`CORS_ORIGIN=https://sebasperu.com`. En **App A** define
+`NEXT_PUBLIC_API_URL=https://panel.sebasperu.com`.
