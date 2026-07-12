@@ -76,15 +76,15 @@ MP_ACCESS_TOKEN=<tu-access-token>
 4. Verifica: `https://panel.tudominio.com/admin` (panel) y `https://www.tudominio.com` (tienda SEO).
 5. Configura el **webhook de Mercado Pago** hacia `https://panel.tudominio.com/api/pay/mercadopago/webhook`.
 
-## Nota de arquitectura (importante)
+## Arquitectura (resuelta)
 
-Hoy la **tienda Next.js** (App A) es el catálogo optimizado para SEO (SSR). El
-**carrito/checkout, cuentas de cliente, Mercado Pago y correos** viven en la app
-Express+Vite (App B). Opciones:
+La **tienda Next.js (App A) ya es una tienda COMPLETA con SEO**: catálogo SSR/SSG/ISR,
+carrito, **checkout**, **cuentas de cliente + historial de pedidos**, Mercado Pago y
+correos (registro y confirmación). → **App A es el sitio público principal** (`www`).
 
-- **Simple y completo hoy:** usa **App B como sitio principal** (tiene TODO
-  funcionando: catálogo, carrito, checkout, cuentas, pagos, correos, panel). El
-  SEO es del lado del cliente (bueno, no SSR).
-- **SEO máximo:** usa **App A (Next.js) como sitio principal** y enlaza el
-  checkout a App B — o portamos el checkout/cuentas a Next.js para unificar todo
-  en una sola app SSR (tarea adicional recomendada para el mejor resultado).
+**App B (Express) queda como API + Panel de administración** (`panel.`): sirve `/api`
+(que consume App A) y el panel en `/admin`. Los clientes NO usan App B directamente.
+
+Para que App A (navegador) pueda llamar a la API de App B, en **App B** define
+`CORS_ORIGIN=https://www.tudominio.com`. En **App A** define
+`NEXT_PUBLIC_API_URL=https://panel.tudominio.com`.
