@@ -32,7 +32,7 @@ export default function CartPage() {
         <aside className="cart-summary">
           <h3>Resumen</h3>
           <div className="sum-row total"><span>Total</span><b>{peso(total)}</b></div>
-          <p className="muted small" style={{ marginTop: 12 }}>El checkout completo está disponible en la app del cliente.</p>
+          <Link className="btn-primary block" href="/checkout" style={{ marginTop: 14 }}>Finalizar compra</Link>
         </aside>
       </div>
     </div>

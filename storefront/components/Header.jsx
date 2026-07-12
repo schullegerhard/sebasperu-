@@ -8,6 +8,7 @@ import {
 import { ProductImage } from './imageMap.jsx'
 import { products, categories, peso } from '../lib/catalog.js'
 import { useCart } from './CartProvider.jsx'
+import { getCustomer } from '../lib/client.js'
 
 const Logo = ({ variant = 'inner' }) => (
   <Link href="/" className="logo" aria-label="SEBASTPERU — Inicio">
@@ -40,7 +41,15 @@ export default function Header() {
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const [mega, setMega] = useState(false)
+  const [customer, setCustomer] = useState(null)
   const boxRef = useRef(null)
+
+  useEffect(() => {
+    const sync = () => setCustomer(getCustomer())
+    sync()
+    window.addEventListener('sp-auth', sync)
+    return () => window.removeEventListener('sp-auth', sync)
+  }, [])
 
   const results = useMemo(() => {
     const t = q.trim().toLowerCase()
@@ -95,7 +104,7 @@ export default function Header() {
             {variant === 'home' && (
               <Link href="/ofertas" className="header-action promo-action"><Tag size={19} /><span>Promociones</span></Link>
             )}
-            <Link href="/cuenta" className="header-action acc-action"><User size={22} /><span className="ha-col"><small>Mi cuenta</small><b>Iniciar sesión</b></span></Link>
+            <Link href="/cuenta" className="header-action acc-action"><User size={22} /><span className="ha-col"><small>Mi cuenta</small><b>{customer ? `Hola, ${customer.name.split(' ')[0]}` : 'Iniciar sesión'}</b></span></Link>
             {variant !== 'home' && (
               <Link href="/cuenta" className="header-action fav-action"><Heart size={22} /><span className="ha-lbl">Favoritos</span></Link>
             )}

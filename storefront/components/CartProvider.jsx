@@ -26,11 +26,17 @@ export default function CartProvider({ children }) {
     clearTimeout(addToCart._t); addToCart._t = setTimeout(() => setToast(null), 2200)
   }, [])
 
+  const updateQty = useCallback((id, qty) => {
+    setCart((prev) => prev.map((i) => (i.id === id ? { ...i, qty: Math.max(1, qty) } : i)))
+  }, [])
+  const removeItem = useCallback((id) => setCart((prev) => prev.filter((i) => i.id !== id)), [])
+  const clearCart = useCallback(() => setCart([]), [])
+
   const count = cart.reduce((n, i) => n + i.qty, 0)
   const total = cart.reduce((n, i) => n + i.qty * i.price, 0)
 
   return (
-    <CartContext.Provider value={{ cart, count, total, addToCart }}>
+    <CartContext.Provider value={{ cart, count, total, ready, addToCart, updateQty, removeItem, clearCart }}>
       {children}
       {toast && <div className="toast">{toast}</div>}
     </CartContext.Provider>
