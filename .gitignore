@@ -27,3 +27,4 @@ guidelines/
 
 # Config local de Claude Code (planes, settings)
 .claude/
+.mcp.json

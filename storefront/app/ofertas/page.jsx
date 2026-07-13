@@ -1,6 +1,11 @@
-import ProductCard from '../../components/ProductCard.jsx'
-import { getAllProducts } from '../../lib/data.js'
+import Link from 'next/link'
+import CategoryFilters from '../../components/CategoryFilters.jsx'
+import { ChevronRight } from '../../components/Icons.jsx'
+import { getAllProducts, getCategories, getAttributes } from '../../lib/data.js'
 
+export const revalidate = 60
+
+// App 1 = Catalog mode="offers": productos con descuento (oldPrice > price).
 export const metadata = {
   title: 'Ofertas',
   description: 'Aprovecha las mejores ofertas en tecnología: laptops, impresoras, tóner y tintas con descuento en SebasPeru.',
@@ -8,12 +13,15 @@ export const metadata = {
 }
 
 export default async function Ofertas() {
-  const products = await getAllProducts()
-  const items = products.filter((p) => p.offer)
+  const [all, cats, attrDefs] = await Promise.all([getAllProducts(), getCategories(), getAttributes()])
+  const items = all.filter((p) => p.oldPrice && Number(p.oldPrice) > Number(p.price))
+  const title = 'Ofertas'
+
   return (
-    <div className="container page">
-      <h1 className="page-title" style={{ marginBottom: 16 }}>Ofertas</h1>
-      <div className="ccard-grid">{items.map((p) => <ProductCard key={p.id} p={p} />)}</div>
+    <div className="container page cat2">
+      <div className="cat-crumb"><Link href="/">Inicio</Link><ChevronRight size={12} /><span>{title}</span></div>
+
+      <CategoryFilters slug="ofertas" meta={{ title }} products={items} cats={cats} attrDefs={attrDefs} />
     </div>
   )
 }

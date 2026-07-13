@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation'
+import Breadcrumbs from '../../../components/Breadcrumbs.jsx'
+import LibroReclamaciones from '../../../components/LibroReclamaciones.jsx'
 import { getPageBySlug, getPages } from '../../../lib/data.js'
 import { ORIGIN } from '../../../lib/seo.js'
 
@@ -19,11 +21,21 @@ const COPY = {
 export async function generateStaticParams() {
   const pages = await getPages()
   const slugs = pages.length ? pages.map((p) => p.slug) : Object.keys(COPY)
-  return slugs.map((page) => ({ page }))
+  return [...new Set([...slugs, 'libro-reclamaciones'])].map((page) => ({ page }))
 }
 
 export async function generateMetadata({ params }) {
   const { page } = await params
+  const isLR = page === 'libro-reclamaciones'
+  if (isLR) {
+    const title = 'Libro de Reclamaciones'
+    const description = 'Libro de Reclamaciones virtual de SebasPeru.'
+    return {
+      title, description,
+      alternates: { canonical: `/legal/${page}` },
+      openGraph: { title, description, url: `${ORIGIN}/legal/${page}` },
+    }
+  }
   const managed = await getPageBySlug(page)
   const c = COPY[page]
   const title = managed?.title || c?.title
@@ -41,20 +53,24 @@ export async function generateMetadata({ params }) {
 
 export default async function Legal({ params }) {
   const { page } = await params
-  const managed = await getPageBySlug(page)
+  const isLR = page === 'libro-reclamaciones'
+  const managed = isLR ? null : await getPageBySlug(page)
   const c = COPY[page]
-  if (!managed && !c) notFound()
-  const title = managed?.title || c.title
+  if (!isLR && !managed && !c) notFound()
+  const title = isLR ? 'Libro de Reclamaciones' : (managed?.title || c.title)
 
   return (
     <div className="container page legal-page">
-      <h1 className="page-title" style={{ marginBottom: 16 }}>{title}</h1>
-      <div className="legal-body">
-        {managed?.body
-          ? <div className="legal-html" dangerouslySetInnerHTML={{ __html: managed.body }} />
-          : c.body.map((p, i) => <p key={i}>{p}</p>)}
-        <p className="muted small legal-updated">Para consultas escríbenos a ventas@sebasperu.com.</p>
-      </div>
+      <Breadcrumbs items={[{ label: 'Inicio', to: '/' }, { label: title }]} />
+      <h1 className="page-title">{title}</h1>
+      {isLR ? <LibroReclamaciones /> : (
+        <div className="legal-body">
+          {managed?.body
+            ? <div className="legal-html" dangerouslySetInnerHTML={{ __html: managed.body }} />
+            : c.body.map((p, i) => <p key={i}>{p}</p>)}
+          <p className="muted small legal-updated">Para consultas escríbenos a ventas@sebasperu.com.</p>
+        </div>
+      )}
     </div>
   )
 }
