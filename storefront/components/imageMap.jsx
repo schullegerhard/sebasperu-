@@ -9,7 +9,9 @@ const map = {
   router: RouterImg, headset: HeadsetImg, chair: OfficeChairImg,
 }
 
-const isUrl = (s) => typeof s === 'string' && (s.startsWith('data:') || s.startsWith('http') || s.startsWith('/uploads'))
+// data URL, http(s), o cualquier ruta absoluta (/img/…, /uploads/…, /logo.png).
+// Las claves de ícono ('laptop', 'printer'…) no llevan barra inicial.
+const isUrl = (s) => typeof s === 'string' && (s.startsWith('data:') || s.startsWith('http') || s.startsWith('/'))
 
 // Resolve a product/category image to a real <img> (uploaded/URL) or an SVG icon.
 export const ProductImage = ({ image, tint, label, alt = '', ...props }) => {

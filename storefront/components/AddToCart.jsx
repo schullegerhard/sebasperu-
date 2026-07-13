@@ -1,24 +1,35 @@
 'use client'
 import { useState } from 'react'
-import { Cart, Zap } from './Icons.jsx'
+import { useRouter } from 'next/navigation'
+import { Cart, Zap, Shield, Plus } from './Icons.jsx'
 import { useCart } from './CartProvider.jsx'
 
-// Isla cliente para la ficha de producto (cantidad + agregar/comprar).
+// Isla cliente para la ficha de producto: renderiza el "buybox" (stock,
+// cantidad, agregar/comprar y sello de confianza) con las clases `pdp-*`.
 export default function AddToCart({ product }) {
   const { addToCart } = useCart()
+  const router = useRouter()
   const [qty, setQty] = useState(1)
+  const [added, setAdded] = useState(false)
+  const doAdd = () => { addToCart(product, qty); setAdded(true); setTimeout(() => setAdded(false), 2000) }
+  const buyNow = () => { addToCart(product, qty); router.push('/checkout') }
   return (
-    <>
-      <div className="pd2-qtyrow">
+    <div className="pdp-buybox">
+      <div className="pdp-stock"><i className="dot" /> <b>En stock</b> <small>· Retiro en 24 horas</small></div>
+      <div className="pdp-qtyrow">
         <span>Cantidad:</span>
-        <div className="qty">
-          <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Disminuir">−</button>
-          <input value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))} />
-          <button onClick={() => setQty((q) => q + 1)} aria-label="Aumentar">+</button>
+        <div className="pdp-qty">
+          <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Menos">−</button>
+          <span>{qty}</span>
+          <button onClick={() => setQty((q) => q + 1)} aria-label="Más"><Plus size={12} /></button>
         </div>
       </div>
-      <button className="add-btn lg pd2-add" disabled={product.stock === 0} onClick={() => addToCart(product, qty)}><Cart size={18} /> Agregar al carrito</button>
-      <button className="pd2-buy" disabled={product.stock === 0} onClick={() => addToCart(product, qty)}><Zap size={17} /> Comprar ahora</button>
-    </>
+      <button className={`pdp-add ${added ? 'ok' : ''}`} onClick={doAdd}>{added ? <><Shield size={15} /> ¡Agregado!</> : <><Cart size={15} /> Agregar al carrito</>}</button>
+      <button className="pdp-buy" onClick={buyNow}><Zap size={14} /> Comprar ahora</button>
+      <div className="pdp-trust">
+        <Shield size={13} />
+        <div><b>Disponible en SEBASTPERU</b><small>Normalmente está listo en 24 horas</small></div>
+      </div>
+    </div>
   )
 }

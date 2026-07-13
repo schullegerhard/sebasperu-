@@ -44,19 +44,13 @@ export default async function CategoryPage({ params }) {
     const order = meta.featured
     ordered = [...items].sort((a, b) => (order.indexOf(a.id) === -1 ? 99 : order.indexOf(a.id)) - (order.indexOf(b.id) === -1 ? 99 : order.indexOf(b.id)))
   }
+  const title = meta?.title || cat.name
   const crumbs = [{ label: 'Inicio', to: '/' }, ...(meta?.crumb || [{ label: cat.name }])]
 
   return (
-    <div className="container page catalog2">
+    <div className="container page cat2">
       <JsonLd data={breadcrumbJsonLd(crumbs)} />
-      <nav className="breadcrumbs" aria-label="Migas de pan">
-        {crumbs.map((c, i) => (
-          <span className="crumb" key={i}>
-            {c.to && i < crumbs.length - 1 ? <Link href={c.to}>{c.label}</Link> : <span className="crumb-current">{c.label}</span>}
-            {i < crumbs.length - 1 && <ChevronRight size={13} className="crumb-sep" />}
-          </span>
-        ))}
-      </nav>
+      <div className="cat-crumb"><Link href="/">Inicio</Link><ChevronRight size={12} /><span>{title}</span></div>
 
       <CategoryFilters slug={slug} meta={meta} cat={cat} products={ordered} cats={cats} attrDefs={attrDefs} />
     </div>

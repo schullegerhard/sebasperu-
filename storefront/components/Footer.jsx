@@ -1,5 +1,7 @@
+'use client'
+import { useState } from 'react'
 import Link from 'next/link'
-import { Lock, ShieldCheck, Truck, Headset } from './Icons.jsx'
+import { Lock, ShieldCheck, Truck, Headset, Facebook, Instagram, Youtube, Mail } from './Icons.jsx'
 
 const PaymentMarks = () => (
   <div className="foot-pay">
@@ -20,37 +22,66 @@ const footTrust = [
 const columns = [
   { title: 'Mi cuenta', links: [['Mis pedidos', '/cuenta'], ['Mis direcciones', '/cuenta'], ['Cambiar contraseña', '/cuenta'], ['Crear cuenta', '/cuenta']] },
   { title: 'La empresa', links: [['Sobre nosotros', '/legal/quienes-somos'], ['Nuestra tienda', '/legal/quienes-somos'], ['Contacto', '/cotizacion'], ['Ventas corporativas', '/cotizacion']] },
-  { title: 'Ayuda al cliente', links: [['Preguntas frecuentes', '/legal/preguntas'], ['Cobertura de envíos', '/legal/devoluciones'], ['Seguimiento de pedido', '/cuenta'], ['Escríbenos por WhatsApp', 'https://wa.me/51925552042']] },
-  { title: 'Legales', links: [['Política de privacidad', '/legal/privacidad'], ['Política de devoluciones', '/legal/devoluciones'], ['Términos y condiciones', '/legal/terminos'], ['Política de envíos', '/legal/devoluciones']] },
+  { title: 'Ayuda al cliente', links: [['Preguntas frecuentes', '/legal/preguntas'], ['Cobertura de envíos', '/legal/envios'], ['Seguimiento de pedido', '/cuenta'], ['Escríbenos por WhatsApp', 'https://wa.me/51925552042']] },
+  { title: 'Legales', links: [['Política de privacidad', '/legal/privacidad'], ['Política de devoluciones', '/legal/devoluciones'], ['Términos y condiciones', '/legal/terminos'], ['Política de envíos', '/legal/envios']] },
 ]
 
 export default function Footer() {
+  const [email, setEmail] = useState('')
+  const [accept, setAccept] = useState(false)
+  const submit = (e) => { e.preventDefault(); if (accept) { setEmail(''); alert('¡Suscripción registrada!') } }
+
   return (
     <footer className="footer2">
-      <div className="container">
-        <div className="foot-trust-cards">
+      <div className="foot-trust-band">
+        <div className="container foot-trust-cards">
           {footTrust.map((t) => (
             <div className="foot-trust-card" key={t.label}>{t.icon}<span>{t.label}</span></div>
           ))}
         </div>
+      </div>
+      <div className="container">
         <div className="footer2-grid">
           <div className="footer2-news">
+            <img src="/logo.png" alt="SEBASTPERU" className="footer2-logo" width="170" height="40" />
             <h4>Suscríbete a nuestro newsletter</h4>
             <p>Al suscribirte, aceptas nuestros términos de servicio y política de privacidad. Puedes darte de baja en cualquier momento.</p>
-            <form className="news2"><input type="email" placeholder="Correo electrónico" /><button type="button">Suscribirme</button></form>
-            <label className="news2-check"><input type="checkbox" /> Acepto los <Link href="/legal/terminos">términos y políticas</Link> del sitio</label>
+            <form className="news2" onSubmit={submit}>
+              <Mail size={14} className="news2-mail" />
+              <input type="email" required placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <button type="submit">Suscribirme</button>
+            </form>
+            <label className="news2-check">
+              <input type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} />
+              <span>Acepto los <Link href="/legal/terminos">términos y políticas</Link> del sitio.</span>
+            </label>
+            <div className="footer2-social">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook size={17} /></a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram size={17} /></a>
+              <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube"><Youtube size={17} /></a>
+            </div>
           </div>
+
           {columns.map((c) => (
             <div className="footer2-col" key={c.title}>
               <h4>{c.title}</h4>
-              <ul>{c.links.map(([label, to]) => <li key={label}>{to.startsWith('http') ? <a href={to}>{label}</a> : <Link href={to}>{label}</Link>}</li>)}</ul>
+              <ul>
+                {c.links.map(([label, to]) => (
+                  <li key={label}>
+                    {to.startsWith('http')
+                      ? <a href={to} target="_blank" rel="noreferrer">{label}</a>
+                      : <Link href={to}>{label}</Link>}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
       </div>
+
       <div className="footer2-bottom">
         <div className="container">
-          <span className="copy">© SEBASTPERU 2025</span>
+          <span className="copy">© 2025 SEBASTPERU S.A.C. — Suministros y Tecnología — Lima, Perú</span>
           <PaymentMarks />
         </div>
       </div>

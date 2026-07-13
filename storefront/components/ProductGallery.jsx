@@ -2,31 +2,35 @@
 import { useState } from 'react'
 import { ProductImage } from './imageMap.jsx'
 
+// La galería de la ficha muestra la imagen COMPLETA (sin recortar).
+const CONTAIN = { objectFit: 'contain', width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none' }
+
 // Galería interactiva de la ficha: una miniatura por imagen; al hacer clic
-// cambia la imagen principal. Con una sola imagen muestra una miniatura.
-export default function ProductGallery({ images = [], tint, label }) {
+// cambia la imagen principal. Devuelve un fragmento con `pdp-thumbs` y
+// `pdp-stage` como celdas hermanas del grid `.pdp-grid`.
+export default function ProductGallery({ images = [], tint, label, brand, hasOff, discount }) {
   const gallery = images.length ? images : ['']
-  const [i, setI] = useState(0)
-  const cur = Math.min(i, gallery.length - 1)
+  const [imgIdx, setImgIdx] = useState(0)
+  const cur = Math.min(imgIdx, gallery.length - 1)
   return (
-    <div className="pd2-gallery">
-      <div className="pd2-thumbs">
-        {gallery.map((img, idx) => (
+    <>
+      <div className="pdp-thumbs">
+        {gallery.map((img, i) => (
           <button
-            key={idx}
+            key={i}
             type="button"
-            className={`pd2-thumb ${idx === cur ? 'active' : ''}`}
-            onClick={() => setI(idx)}
-            aria-label={`Ver imagen ${idx + 1}`}
+            className={`pdp-thumb ${i === cur ? 'active' : ''}`}
+            onClick={() => setImgIdx(i)}
+            aria-label={`Ver imagen ${i + 1}`}
           >
-            <ProductImage image={img} tint={tint} label={label} />
+            <ProductImage image={img} tint={tint} label={label} brand={brand} style={CONTAIN} />
           </button>
         ))}
       </div>
-      <div className="pd2-main">
-        <div className="pd2-stage"><div className="pd2-zoomable"><ProductImage image={gallery[cur]} tint={tint} label={label} /></div></div>
-        <div className="pd2-zoomhint">Vista de producto</div>
+      <div className="pdp-stage">
+        <ProductImage image={gallery[cur]} tint={tint} label={label} brand={brand} style={CONTAIN} />
+        {hasOff && <span className="pdp-disc">-{discount}%</span>}
       </div>
-    </div>
+    </>
   )
 }

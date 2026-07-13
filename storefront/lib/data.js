@@ -72,4 +72,10 @@ export async function getPageBySlug(slug) {
   return pages.find((p) => p.slug === slug && p.active !== false)
 }
 
+// Banners gestionados (carrusel del inicio + bloques promocionales).
+export async function getBanners() {
+  if (API) { try { return await getJSON('/api/banners') } catch { /* fallback */ } }
+  return []
+}
+
 export { categoryMeta, flashOffers, impresorasBest, tonerBest, tintasBest, homeBrands, homeCategories }

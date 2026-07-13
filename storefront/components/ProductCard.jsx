@@ -1,35 +1,29 @@
 'use client'
 import Link from 'next/link'
 import { ProductImage } from './imageMap.jsx'
-import { Cart, Heart, Star, Eye } from './Icons.jsx'
+import { Cart, Heart } from './Icons.jsx'
 import { peso } from '../lib/catalog.js'
 import { useCart } from './CartProvider.jsx'
 
-const Stars = ({ value }) => (
-  <span className="stars">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={12} style={{ opacity: i < Math.round(value) ? 1 : 0.3 }} />)}</span>
-)
+const COVER = { objectFit: 'cover', width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none' }
 
-// Tarjeta estilo "categorías". El contenido se renderiza en el servidor (SEO)
-// aunque el botón de carrito sea interactivo en el cliente.
+// Tarjeta de producto del diseño (pcard), igual que App 1. Contenido renderizado
+// en el servidor (SEO); solo el botón "Agregar al carrito" es interactivo.
 export default function ProductCard({ p }) {
   const { addToCart } = useCart()
-  const off = p.off || (p.oldPrice ? Math.round((1 - p.price / p.oldPrice) * 100) : 0)
-  const badge = p.flag === 'oferta' ? { t: '¡Oferta!', c: 'oferta' } : p.flag === 'nuevo' ? { t: 'Nuevo', c: 'nuevo' } : off > 0 ? { t: `-${off}%`, c: 'disc' } : null
+  const to = `/producto/${p.slug}`
+  const hasOff = p.oldPrice && Number(p.oldPrice) > Number(p.price)
+  const off = p.off || (hasOff ? Math.round((1 - p.price / p.oldPrice) * 100) : 0)
   return (
-    <div className="ccard">
-      {badge && <span className={`ccard-badge ${badge.c}`}>{badge.t}</span>}
-      <button className="ccard-fav" aria-label="Favorito"><Heart size={17} /></button>
-      <Link href={`/producto/${p.slug}`} className="ccard-thumb"><ProductImage image={p.image} tint={p.tint} label={p.label} /></Link>
-      {p.trendTag && <span className="ccard-trend"><b>trends</b> {p.trendTag} ›</span>}
-      <Link href={`/producto/${p.slug}`} className="ccard-name">{p.name}</Link>
-      <div className="ccard-blurb">{p.blurb || p.subtitle}</div>
-      {p.rankLabel && <div className="ccard-rank">🏆 {p.rankLabel}</div>}
-      <div className="ccard-rating"><Stars value={p.rating} /> <span>({p.reviews})</span></div>
-      <div className="ccard-price"><span className="price-now">{peso(p.price)}</span>{p.oldPrice && <span className="price-old">{peso(p.oldPrice)}</span>}</div>
-      <div className="ccard-stock">{p.stock > 0 ? 'En stock' : 'Agotado'}</div>
-      <div className="ccard-actions">
-        <button className="ccard-add" onClick={() => addToCart(p)} disabled={p.stock === 0}><Cart size={16} /></button>
-        <Link className="ccard-eye" href={`/producto/${p.slug}`} aria-label="Vista rápida"><Eye size={16} /></Link>
+    <div className="pcard">
+      {p.badge ? <span className="pcard-badge nuevo">{p.badge}</span> : off ? <span className="pcard-badge disc">-{off}%</span> : null}
+      <button className="pcard-fav" aria-label="Favorito"><Heart size={16} /></button>
+      <Link href={to} className="pcard-thumb"><ProductImage image={p.image} tint={p.tint} label={p.label} style={COVER} /></Link>
+      <div className="pcard-body">
+        <span className="pcard-brand">{p.brand}</span>
+        <Link href={to} className="pcard-name">{p.name}</Link>
+        <div className="pcard-price"><span className="now">{peso(p.price).replace('.00', '')}</span>{hasOff && <span className="old">{peso(p.oldPrice).replace('.00', '')}</span>}</div>
+        <button className="pcard-add" onClick={() => addToCart(p)}><Cart size={14} /> Agregar al carrito</button>
       </div>
     </div>
   )
