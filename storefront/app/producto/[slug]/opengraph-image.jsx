@@ -20,7 +20,7 @@ export default async function OpengraphImage({ params }) {
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 72, background: 'linear-gradient(135deg, #001a6e 0%, #0047cc 55%, #1a7fff 100%)', color: '#fff', fontFamily: 'sans-serif' }}>
         <div style={{ display: 'flex', alignItems: 'center', fontSize: 40, fontWeight: 800, letterSpacing: 1 }}>
           <div style={{ width: 56, height: 56, borderRadius: 12, background: '#fff', color: '#0047cc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, fontWeight: 900, marginRight: 20 }}>S</div>
-          SEBASTPERU
+          SebasPeru
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {brand ? <div style={{ fontSize: 30, opacity: 0.85, marginBottom: 14 }}>{brand}</div> : null}

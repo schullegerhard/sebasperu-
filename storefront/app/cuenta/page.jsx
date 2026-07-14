@@ -4,6 +4,7 @@ export const metadata = {
   title: 'Mi cuenta',
   description: 'Inicia sesión o crea tu cuenta en SebasPeru para ver tus pedidos y comprar más rápido.',
   alternates: { canonical: '/cuenta' },
+  robots: { index: false, follow: true },
 }
 
 export default function Cuenta() {

@@ -8,7 +8,7 @@ import RelatedAddButton from '../../../components/RelatedAddButton.jsx'
 import { Truck, Zap, MapPin, Shield, Cart, Star, ChevronRight } from '../../../components/Icons.jsx'
 import { getProductBySlug, getAllProducts, getCategoryBySlug } from '../../../lib/data.js'
 import { peso } from '../../../lib/catalog.js'
-import { ORIGIN, productJsonLd, breadcrumbJsonLd, JsonLd } from '../../../lib/seo.js'
+import { ORIGIN, productJsonLd, breadcrumbJsonLd, productDescription, JsonLd } from '../../../lib/seo.js'
 
 export const revalidate = 60
 
@@ -20,12 +20,18 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params
   const p = await getProductBySlug(slug)
-  if (!p) return { title: 'Producto no encontrado' }
+  if (!p) return { title: 'Producto no encontrado', robots: { index: false, follow: false } }
+  const description = productDescription(p)
+  const title = p.seo?.metaTitle || p.name
+  const ogTitle = p.seo?.ogTitle || p.name
+  const url = `${ORIGIN}/producto/${p.slug}`
   return {
-    title: p.name,
-    description: p.shortDesc,
-    alternates: { canonical: `/producto/${p.slug}` },
-    openGraph: { title: p.name, description: p.shortDesc, type: 'website', url: `${ORIGIN}/producto/${p.slug}` },
+    title,
+    description,
+    alternates: { canonical: p.seo?.canonical || `/producto/${p.slug}` },
+    openGraph: { title: ogTitle, description, type: 'website', url },
+    twitter: { card: 'summary_large_image', title: ogTitle, description },
+    ...(p.seo?.robots === 'noindex' ? { robots: { index: false, follow: true } } : {}),
   }
 }
 
@@ -63,9 +69,13 @@ export default async function ProductPage({ params }) {
   // Galería: imagen principal + galería administrable, sin duplicados ni vacíos.
   const gallery = [...new Set([product.image, ...(Array.isArray(product.gallery) ? product.gallery : []), ...(Array.isArray(product.images) ? product.images : [])].filter(Boolean))]
 
-  // "Podría interesarte": productos vinculados o, en su defecto, de la misma categoría.
+  // "Podría interesarte": productos vinculados o, en su defecto, de la misma
+  // categoría priorizando la misma marca (relevancia, auditoría 4.11).
   let related = (product.related || []).map((id) => all.find((p) => p.id === id)).filter(Boolean)
-  if (!related.length) related = all.filter((p) => p.category === product.category && p.slug !== product.slug)
+  if (!related.length) {
+    const sameCat = all.filter((p) => p.category === product.category && p.slug !== product.slug)
+    related = [...sameCat.filter((p) => p.brand === product.brand), ...sameCat.filter((p) => p.brand !== product.brand)]
+  }
   related = related.slice(0, 4)
 
   // Solo hay descuento si el precio anterior es MAYOR que el actual.
@@ -73,7 +83,8 @@ export default async function ProductPage({ params }) {
   const discount = hasOff ? Math.round((1 - product.price / product.oldPrice) * 100) : 0
   const cuota = Math.round(product.price / 6)
 
-  const crumbs = [{ label: 'Inicio', to: '/' }, { label: categoryLabel, to: `/categoria/${product.category}` }, { label: product.name }]
+  // El último crumb apunta a la URL canónica del producto (auditoría 3.3).
+  const crumbs = [{ label: 'Inicio', to: '/' }, { label: categoryLabel, to: `/categoria/${product.category}` }, { label: product.name, to: `/producto/${product.slug}` }]
 
   return (
     <div className="pdp">
@@ -91,7 +102,7 @@ export default async function ProductPage({ params }) {
         {/* Main grid */}
         <div className="pdp-grid">
           {/* Thumbs + main image (isla cliente: cambia la imagen activa) */}
-          <ProductGallery images={gallery} tint={product.tint} label={product.label} brand={product.brand} hasOff={hasOff} discount={discount} />
+          <ProductGallery images={gallery} name={product.name} tint={product.tint} label={product.label} brand={product.brand} hasOff={hasOff} discount={discount} />
 
           {/* Info */}
           <div className="pdp-info">
@@ -99,7 +110,11 @@ export default async function ProductPage({ params }) {
               <span className="pdp-free"><Truck size={11} /> ENVÍO GRATIS</span>
               <span className="pdp-sku">SKU: {sku}</span>
             </div>
-            <div className="pdp-rating"><Stars value={rating} /> <span>({reviews.toLocaleString('es-PE')} valoraciones de clientes)</span></div>
+            {/* Solo mostramos estrellas si hay reseñas reales (coherente con el
+                JSON-LD; sin reseñas no se pintan 5 estrellas — auditoría 2.3). */}
+            {reviews > 0
+              ? <div className="pdp-rating"><Stars value={rating} /> <span>({reviews.toLocaleString('es-PE')} valoraciones de clientes)</span></div>
+              : <div className="pdp-rating pdp-rating-empty"><span>Sé el primero en valorar este producto</span></div>}
             <h1 className="pdp-title">{product.name}</h1>
             {shortDesc && <p className="pdp-shortdesc">{shortDesc}</p>}
             <div className="pdp-price">
@@ -112,7 +127,8 @@ export default async function ProductPage({ params }) {
               <p className="pdp-cuota-txt">6 cuotas de <b>{peso(cuota).replace('.00', '')}</b> sin intereses</p>
             </div>
             {/* Las especificaciones se muestran solo en la pestaña "Especificaciones" (abajo). */}
-            <div className="pdp-sold">🔥 <span>85 vendidos en las últimas 48 horas</span></div>
+            {/* Urgencia de ventas: solo con dato real del backend (auditoría 4.9). */}
+            {Number(product.soldRecently) > 0 && <div className="pdp-sold">🔥 <span>{product.soldRecently} vendidos en las últimas 48 horas</span></div>}
             <div className="pdp-cuotas">
               <div><small>Paga en 6 cuotas sin intereses</small><b>{peso(cuota).replace('.00', '')} / cuota</b></div>
               <div className="pdp-cuotas-cards"><span className="pay visa">VISA</span><span className="mc"><i /><i /></span></div>
@@ -160,8 +176,8 @@ export default async function ProductPage({ params }) {
                 const d = r.oldPrice && Number(r.oldPrice) > Number(r.price) ? Math.round((1 - r.price / r.oldPrice) * 100) : 0
                 return (
                   <div className="pdp-rel-card" key={r.id}>
-                    <Link href={`/producto/${r.slug}`} className="pdp-rel-thumb">
-                      <ProductImage image={r.image} tint={r.tint} label={r.label} brand={r.brand} style={CONTAIN} />
+                    <Link href={`/producto/${r.slug}`} className="pdp-rel-thumb" aria-label={`Ver ${r.name}`}>
+                      <ProductImage image={r.image} tint={r.tint} label={r.label} brand={r.brand} alt={r.name} style={CONTAIN} />
                       {d > 0 && <span className="pdp-rel-disc">-{d}%</span>}
                     </Link>
                     <div className="pdp-rel-body">

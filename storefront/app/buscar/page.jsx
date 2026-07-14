@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 export const metadata = {
   title: 'Buscar productos',
   description: 'Busca laptops, impresoras, tóner, tintas y más en SebasPeru.',
-  robots: { index: false },
+  robots: { index: false, follow: true },
   alternates: { canonical: '/buscar' },
 }
 

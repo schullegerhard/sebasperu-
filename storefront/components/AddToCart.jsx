@@ -28,7 +28,7 @@ export default function AddToCart({ product }) {
       <button className="pdp-buy" onClick={buyNow}><Zap size={14} /> Comprar ahora</button>
       <div className="pdp-trust">
         <Shield size={13} />
-        <div><b>Disponible en SEBASTPERU</b><small>Normalmente está listo en 24 horas</small></div>
+        <div><b>Disponible en SebasPeru</b><small>Normalmente está listo en 24 horas</small></div>
       </div>
     </div>
   )

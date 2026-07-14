@@ -18,7 +18,7 @@ export default function ProductCard({ p }) {
     <div className="pcard">
       {p.badge ? <span className="pcard-badge nuevo">{p.badge}</span> : off ? <span className="pcard-badge disc">-{off}%</span> : null}
       <button className="pcard-fav" aria-label="Favorito"><Heart size={16} /></button>
-      <Link href={to} className="pcard-thumb"><ProductImage image={p.image} tint={p.tint} label={p.label} style={COVER} /></Link>
+      <Link href={to} className="pcard-thumb" aria-label={`Ver ${p.name}`}><ProductImage image={p.image} tint={p.tint} label={p.label} alt={p.name} style={COVER} /></Link>
       <div className="pcard-body">
         <span className="pcard-brand">{p.brand}</span>
         <Link href={to} className="pcard-name">{p.name}</Link>

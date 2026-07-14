@@ -3,7 +3,7 @@ import CartProvider from '../components/CartProvider.jsx'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx'
-import { ORIGIN, SITE, organizationJsonLd, JsonLd } from '../lib/seo.js'
+import { ORIGIN, SITE, organizationJsonLd, websiteJsonLd, JsonLd } from '../lib/seo.js'
 
 // Metadata global (App Router la renderiza en el <head> del HTML servidor).
 export const metadata = {
@@ -23,6 +23,7 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body>
         <JsonLd data={organizationJsonLd()} />
+        <JsonLd data={websiteJsonLd()} />
         <CartProvider>
           <Header />
           <main>{children}</main>

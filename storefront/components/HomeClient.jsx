@@ -103,7 +103,7 @@ const Categorias = ({ categorias }) => (
     <Carousel className="cat-car">
       {categorias.map((c) => (
         <Link className="cat-tile" key={c.name} href={c.to}>
-          <div className="cat-tile-thumb"><ProductImage image={c.image} style={COVER} /></div>
+          <div className="cat-tile-thumb"><ProductImage image={c.image} alt={c.name} style={COVER} /></div>
           <b>{c.name}</b>
         </Link>
       ))}
@@ -127,8 +127,8 @@ const FlashCard = ({ p }) => {
   const to = `/producto/${p.slug}`
   return (
     <div className="fcard">
-      <Link href={to} className="fcard-media">
-        <div className="fcard-img"><ProductImage image={p.image} tint={p.tint} label={p.label} style={COVER} /></div>
+      <Link href={to} className="fcard-media" aria-label={`Ver ${p.name}`}>
+        <div className="fcard-img"><ProductImage image={p.image} tint={p.tint} label={p.label} alt={p.name} style={COVER} /></div>
         <span className="fcard-badge"><Zap size={11} /> -{p.off}%</span>
         <div className="fcard-stockbar"><i style={{ width: `${pct}%` }} /></div>
         <span className="fcard-stock">Solo {p.stock} disponibles</span>

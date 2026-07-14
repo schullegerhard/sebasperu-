@@ -4,7 +4,7 @@ export const metadata = {
   title: 'Finalizar compra',
   description: 'Completa tu compra en SebasPeru de forma rápida y segura.',
   alternates: { canonical: '/checkout' },
-  robots: { index: false }, // el checkout no se indexa
+  robots: { index: false, follow: true }, // el checkout no se indexa
 }
 
 export default function Checkout() {

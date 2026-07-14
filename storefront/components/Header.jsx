@@ -13,8 +13,8 @@ import { useCart } from './CartProvider.jsx'
 import { getCustomer } from '../lib/client.js'
 
 export const Logo = () => (
-  <Link href="/" className="logo" aria-label="SEBASTPERU — Inicio">
-    <img src="/logo.png" alt="SEBASTPERU — Suministros y Tecnología" className="logo-img" width="190" height="44" />
+  <Link href="/" className="logo" aria-label="SebasPeru — Inicio">
+    <img src="/logo.png" alt="SebasPeru — Suministros y Tecnología" className="logo-img" width="190" height="44" />
   </Link>
 )
 

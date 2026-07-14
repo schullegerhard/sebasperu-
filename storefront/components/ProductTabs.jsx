@@ -31,7 +31,7 @@ export default function ProductTabs({ name, longDesc, faq = [], specsRows = [], 
                 <>
                   <p className="lead">{name}</p>
                   <p>Producto original con garantía oficial de fábrica. Ideal para uso profesional y personal. Cuenta con las últimas tecnologías para garantizar el mejor rendimiento y durabilidad.</p>
-                  <p>En SEBASTPERU ofrecemos únicamente productos auténticos de las mejores marcas con factura y garantía oficial, respaldados por nuestro equipo de soporte técnico especializado en Lima y provincias.</p>
+                  <p>En SebasPeru ofrecemos únicamente productos auténticos de las mejores marcas con factura y garantía oficial, respaldados por nuestro equipo de soporte técnico especializado en Lima y provincias.</p>
                 </>
               )}
             {faq.length > 0 && (
@@ -53,24 +53,32 @@ export default function ProductTabs({ name, longDesc, faq = [], specsRows = [], 
           </table>
         )}
         {tab === 'reviews' && (
-          <div className="pdp-reviews">
-            <div className="pdp-rev-summary">
-              <div className="pdp-rev-score"><b>{rating}</b><Stars value={rating} /><small>{reviews.toLocaleString('es-PE')} reseñas</small></div>
-              <div className="pdp-rev-bars">
-                {[5, 4, 3, 2, 1].map((r) => (
-                  <div className="pdp-rev-bar" key={r}><span>{r}</span><Star size={11} /><div className="track"><i style={{ width: r === 5 ? '72%' : r === 4 ? '18%' : r === 3 ? '7%' : '2%' }} /></div></div>
+          reviews > 0 ? (
+            <div className="pdp-reviews">
+              <div className="pdp-rev-summary">
+                <div className="pdp-rev-score"><b>{rating}</b><Stars value={rating} /><small>{reviews.toLocaleString('es-PE')} reseñas</small></div>
+                <div className="pdp-rev-bars">
+                  {[5, 4, 3, 2, 1].map((r) => (
+                    <div className="pdp-rev-bar" key={r}><span>{r}</span><Star size={11} /><div className="track"><i style={{ width: r === 5 ? '72%' : r === 4 ? '18%' : r === 3 ? '7%' : '2%' }} /></div></div>
+                  ))}
+                </div>
+              </div>
+              <div className="pdp-rev-list">
+                {REVIEWS.map((rev) => (
+                  <div className="pdp-rev" key={rev.name}>
+                    <div className="pdp-rev-head"><span className="av">{rev.name[0]}</span><div><b>{rev.name}</b><small>{rev.date}</small></div><Stars value={rev.rating} /></div>
+                    <p>{rev.text}</p>
+                  </div>
                 ))}
               </div>
             </div>
-            <div className="pdp-rev-list">
-              {REVIEWS.map((rev) => (
-                <div className="pdp-rev" key={rev.name}>
-                  <div className="pdp-rev-head"><span className="av">{rev.name[0]}</span><div><b>{rev.name}</b><small>{rev.date}</small></div><Stars value={rev.rating} /></div>
-                  <p>{rev.text}</p>
-                </div>
-              ))}
+          ) : (
+            // Sin reseñas reales no mostramos valoraciones inventadas (auditoría 2.3).
+            <div className="pdp-reviews pdp-reviews-empty">
+              <p>Este producto aún no tiene reseñas.</p>
+              <p className="muted small">Sé el primero en compartir tu opinión tras tu compra.</p>
             </div>
-          </div>
+          )
         )}
       </div>
     </div>

@@ -45,7 +45,10 @@ export default async function CategoryPage({ params }) {
     ordered = [...items].sort((a, b) => (order.indexOf(a.id) === -1 ? 99 : order.indexOf(a.id)) - (order.indexOf(b.id) === -1 ? 99 : order.indexOf(b.id)))
   }
   const title = meta?.title || cat.name
-  const crumbs = [{ label: 'Inicio', to: '/' }, ...(meta?.crumb || [{ label: cat.name }])]
+  // El último crumb apunta a la URL canónica de la categoría (auditoría 3.3).
+  const tail = (meta?.crumb || [{ label: cat.name }]).map((c) => ({ ...c }))
+  tail[tail.length - 1] = { ...tail[tail.length - 1], to: `/categoria/${slug}` }
+  const crumbs = [{ label: 'Inicio', to: '/' }, ...tail]
 
   return (
     <div className="container page cat2">

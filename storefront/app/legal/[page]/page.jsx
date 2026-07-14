@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Breadcrumbs from '../../../components/Breadcrumbs.jsx'
 import LibroReclamaciones from '../../../components/LibroReclamaciones.jsx'
 import { getPageBySlug, getPages } from '../../../lib/data.js'
-import { ORIGIN } from '../../../lib/seo.js'
+import { ORIGIN, breadcrumbJsonLd, JsonLd } from '../../../lib/seo.js'
 
 export const revalidate = 300
 
@@ -59,8 +59,11 @@ export default async function Legal({ params }) {
   if (!isLR && !managed && !c) notFound()
   const title = isLR ? 'Libro de Reclamaciones' : (managed?.title || c.title)
 
+  const crumbs = [{ label: 'Inicio', to: '/' }, { label: title, to: `/legal/${page}` }]
+
   return (
     <div className="container page legal-page">
+      <JsonLd data={breadcrumbJsonLd(crumbs)} />
       <Breadcrumbs items={[{ label: 'Inicio', to: '/' }, { label: title }]} />
       <h1 className="page-title">{title}</h1>
       {isLR ? <LibroReclamaciones /> : (
