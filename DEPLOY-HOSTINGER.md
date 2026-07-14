@@ -49,12 +49,15 @@ JWT_SECRET=<un-secreto-largo-y-aleatorio>
 CORS_ORIGIN=https://sebasperu.com          # permite que la tienda llame a la API
 PUBLIC_URL=https://panel.sebasperu.com         # back_urls/webhook de Mercado Pago
 
-# Correo (Gmail → contraseña de aplicación)
-SMTP_HOST=smtp.gmail.com
+# Correo — buzón de Hostinger. Usa la CONTRASEÑA DEL BUZÓN (hPanel → Emails →
+# Email Accounts → ventas@sebasperu.com). Hostinger no usa "contraseñas de aplicación".
+# Puertos verificados: 465 (SSL) y 587 (STARTTLS). El código pone secure=true si el puerto es 465.
+SMTP_HOST=smtp.hostinger.com
 SMTP_PORT=465
-SMTP_USER=tucorreo@gmail.com
-SMTP_PASS=<contraseña-de-aplicacion>
-MAIL_FROM=SebasPeru <tucorreo@gmail.com>
+SMTP_USER=ventas@sebasperu.com
+SMTP_PASS=<contraseña-del-buzón>
+MAIL_FROM=SebasPeru <ventas@sebasperu.com>
+QUOTE_TO=ventas@sebasperu.com
 
 # Mercado Pago (TEST-… para pruebas, APP_USR-… en producción)
 MP_ACCESS_TOKEN=<tu-access-token>
