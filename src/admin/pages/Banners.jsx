@@ -67,7 +67,7 @@ export default function Banners() {
         <Modal title={modal.id ? 'Editar banner' : 'Nuevo banner'} onClose={() => setModal(null)}>
           <form className="adm-form" onSubmit={save}>
             <label className="lbl">Imagen del banner</label>
-            <ImageUpload value={modal.image} onChange={(v) => setModal({ ...modal, image: v })} maxW={1000} ratio="16/6" hint="Foto del producto/promo (se muestra en el banner)." />
+            <ImageUpload value={modal.image} onChange={(v) => setModal({ ...modal, image: v })} maxW={1920} quality={0.92} ratio="16/6" hint="Imagen YA DISEÑADA del banner (el texto va dentro de la imagen). Recomendado 1920 × 720 px." />
             <div className="adm-form-grid">
               <label>Ubicación<select value={modal.slot || 'hero'} onChange={(e) => setModal({ ...modal, slot: e.target.value })}>{SLOTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
               <label>Tema de color<select value={modal.theme} onChange={(e) => setModal({ ...modal, theme: e.target.value })}>{THEMES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>

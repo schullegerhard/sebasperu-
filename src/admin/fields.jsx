@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from 'react'
 import { ProductImage } from '../components/imageMap.jsx'
 import { Plus, Trash, X } from '../components/Icons.jsx'
 
-/* Redimensiona/comprime una imagen en el navegador → data URL (se guarda en la BD). */
-export function fileToDataURL(file, maxW = 800, quality = 0.74) {
+/* Redimensiona/comprime una imagen en el navegador → data URL (se guarda en la BD).
+   Nota de CALIDAD: el ancho máximo y la compresión definen la nitidez final. Los
+   banners se muestran a todo el ancho (hasta 1400 px), por eso suben a 1920 px. */
+export function fileToDataURL(file, maxW = 1200, quality = 0.85) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onerror = reject
@@ -29,11 +31,11 @@ export function fileToDataURL(file, maxW = 800, quality = 0.74) {
 const isImg = (v) => typeof v === 'string' && (v.startsWith('data:') || v.startsWith('http'))
 
 /* Campo de subida de una imagen (con vista previa). */
-export function ImageUpload({ value, onChange, maxW = 800, hint, ratio = '1/1' }) {
+export function ImageUpload({ value, onChange, maxW = 1200, quality = 0.85, hint, ratio = '1/1' }) {
   const onFile = async (e) => {
     const f = e.target.files?.[0]; if (!f) return
     if (!f.type.startsWith('image/')) return alert('Selecciona una imagen.')
-    try { onChange(await fileToDataURL(f, maxW)) } catch { alert('No se pudo procesar la imagen.') }
+    try { onChange(await fileToDataURL(f, maxW, quality)) } catch { alert('No se pudo procesar la imagen.') }
     e.target.value = ''
   }
   return (
@@ -55,7 +57,7 @@ export function Gallery({ value = [], onChange }) {
   const onFiles = async (e) => {
     const files = [...(e.target.files || [])]
     const urls = []
-    for (const f of files) { if (f.type.startsWith('image/')) urls.push(await fileToDataURL(f, 800)) }
+    for (const f of files) { if (f.type.startsWith('image/')) urls.push(await fileToDataURL(f, 1200)) }
     onChange([...value, ...urls]); e.target.value = ''
   }
   return (
