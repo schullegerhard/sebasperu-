@@ -630,10 +630,9 @@
 @media (max-width: 900px) { .hero3-art { display: none; } .hero3-content h1 { font-size: 30px; } .hero3-slide { grid-template-columns: 1fr; padding: 20px 24px; } }
 @media (prefers-reduced-motion: reduce) { .hero3-track { transition: none; } }
 
-/* ============ Hero banner: carrusel de imagen completa (sin texto, sin sombra) ============ */
-.hero-banner { padding: 0 0 16px; }
-.hero-banner .container { max-width: 1400px; }
-.hb-viewport { position: relative; border-radius: 12px; overflow: hidden; }
+/* ============ Hero banner: imagen diseñada a TODO el ancho (estilo Dataplus) ============ */
+.hero-banner { padding: 0; }
+.hb-viewport { position: relative; border-radius: 0; overflow: hidden; }
 .hb-track { display: flex; transition: transform .6s cubic-bezier(.4, 0, .2, 1); }
 .hb-slide { flex: 0 0 100%; display: block; }
 .hb-slide img { width: 100%; height: auto; display: block; }
