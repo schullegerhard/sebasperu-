@@ -19,12 +19,10 @@ const heroSlides = [
   { theme: 'orange', badgeStyle: 'white', badge: 'NUEVA COLECCIÓN 2024', title: <>Laptops HP, Dell<br />y Lenovo desde<br />S/ 1,899</>, sub: 'Procesadores Intel Core i5 e i7 de 12ª y 13ª generación. Cuotas sin intereses.', cta: 'Ver Laptops', to: '/categoria/laptops-pc', img: '/img/photo-1517336714731-489689fd1ca8.jpg' },
   { theme: 'green', badgeStyle: 'white', badge: 'STOCK DISPONIBLE', title: <>Tóner original<br />para impresoras<br />laser</>, sub: 'HP, Samsung, Brother y Epson. Entrega en 24 horas en Lima.', cta: 'Ver Tóner', to: '/categoria/toner', img: '/img/photo-1586953208448-b95a79798f07.jpg' },
 ]
-const bannerToSlide = (b) => ({ img: b.image, to: b.link || '/productos', alt: b.title || b.badge || 'Banner' })
+const bannerToSlide = (b) => ({ theme: b.theme || 'blue', badgeStyle: (!b.theme || b.theme === 'blue') ? 'gold' : 'white', badge: b.badge, title: b.title, sub: b.subtitle, cta: b.cta || 'Ver más', to: b.link || '/productos', img: b.image })
 
 const Hero = ({ heroBanners }) => {
-  const slides = heroBanners.length
-    ? heroBanners.map(bannerToSlide)
-    : heroSlides.map((s) => ({ img: s.img, to: s.to, alt: 'Banner' }))
+  const slides = heroBanners.length ? heroBanners.map(bannerToSlide) : heroSlides
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
   const n = slides.length
@@ -36,25 +34,33 @@ const Hero = ({ heroBanners }) => {
   }, [paused, n])
   const cur = n ? ((i % n) + n) % n : 0
   return (
-    <section className="hero-banner">
+    <section className="hero3">
       <div className="container">
-        <div className="hb-viewport" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-          <div className="hb-track" style={{ transform: `translateX(-${cur * 100}%)` }}>
+        <div className="hero3-inner" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+          <div className="hero3-track" style={{ transform: `translateX(-${cur * 100}%)` }}>
             {slides.map((s, idx) => (
-              <Link className="hb-slide" href={s.to} key={idx} aria-hidden={idx !== cur} tabIndex={idx === cur ? 0 : -1}>
-                <img src={s.img} alt={s.alt} />
-              </Link>
+              <div className={`hero3-slide t-${s.theme}`} key={idx} aria-hidden={idx !== cur}>
+                <div className="hero3-content">
+                  {s.badge && <span className={`hero3-badge ${s.badgeStyle}`}><Zap size={14} /> {s.badge}</span>}
+                  <h1>{s.title}</h1>
+                  <p>{s.sub}</p>
+                  <div className="hero3-btns">
+                    <Link className="hero3-btn primary" href={s.to} tabIndex={idx === cur ? 0 : -1}>{s.cta} <ArrowRight size={16} /></Link>
+                    <Link className="hero3-btn ghost" href="/productos" tabIndex={idx === cur ? 0 : -1}>Ver todo</Link>
+                  </div>
+                  <div className="hero3-chips">
+                    {heroChips.map((c) => <span className="hero3-chip" key={c}><Shield size={11} /> {c}</span>)}
+                  </div>
+                </div>
+                <div className="hero3-art"><div className="hero3-card"><ProductImage image={s.img} alt="" style={COVER} /></div></div>
+              </div>
             ))}
           </div>
-          {n > 1 && (
-            <>
-              <button className="hb-arrow left" onClick={() => go(i - 1)} aria-label="Anterior"><ChevronLeft size={20} /></button>
-              <button className="hb-arrow right" onClick={() => go(i + 1)} aria-label="Siguiente"><ChevronRight size={20} /></button>
-              <div className="hb-dots">
-                {slides.map((_, idx) => <button key={idx} className={idx === cur ? 'on' : ''} onClick={() => go(idx)} aria-label={`Ir a la diapositiva ${idx + 1}`} />)}
-              </div>
-            </>
-          )}
+          <button className="hero3-arrow left" onClick={() => go(i - 1)} aria-label="Anterior"><ChevronLeft size={20} /></button>
+          <button className="hero3-arrow right" onClick={() => go(i + 1)} aria-label="Siguiente"><ChevronRight size={20} /></button>
+          <div className="hero3-dots">
+            {slides.map((_, idx) => <button key={idx} className={idx === cur ? 'on' : ''} onClick={() => go(idx)} aria-label={`Ir a la diapositiva ${idx + 1}`} />)}
+          </div>
         </div>
       </div>
     </section>
@@ -159,20 +165,22 @@ const ProductSection = ({ title, items, to }) => (
   </div></section>
 )
 
-// Banner promocional = la imagen COMPLETA y nítida (sin texto superpuesto ni
-// difuminado), igual que el hero. El diseño va dentro de la propia imagen.
-const Promo = ({ to, bg, alt }) => (
-  <Link className="promo-banner" href={to}>
-    <img src={bg} alt={alt} loading="lazy" />
+const Promo = ({ theme, eyebrow, title, accent, sub, btn, to, bg }) => (
+  <Link className={`promo3 t-${theme}`} href={to}>
+    {bg && <img className="promo3-bg" src={bg} alt="" loading="lazy" />}
+    <span className="promo3-eyebrow">{eyebrow}</span>
+    <h3 className="promo3-title">{title}</h3>
+    {accent && <div className="promo3-accent">{accent}</div>}
+    <p className="promo3-sub">{sub}</p>
+    <span className="promo3-btn">{btn} <ChevronRight size={14} /></span>
   </Link>
 )
 const PromoRow = ({ items, last }) => {
-  const promos = (items || []).filter((b) => b && b.image)
-  if (!promos.length) return null
-  const cls = promos.length >= 3 ? 'promo-trio' : promos.length === 2 ? 'promo-pair' : 'promo-solo'
+  if (!items || !items.length) return null
+  const cls = items.length >= 3 ? 'promo3-trio' : items.length === 2 ? 'promo3-pair' : 'promo3-solo'
   return (
-    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={`promo-row ${cls}`}>
-      {promos.map((b, i) => <Promo key={b.id ?? i} to={b.link || '/productos'} bg={b.image} alt={b.title || b.badge || 'Promoción'} />)}
+    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={cls}>
+      {items.map((b, i) => <Promo key={b.id ?? i} theme={b.theme} eyebrow={b.badge} title={b.title} accent={b.accent} sub={b.subtitle} btn={b.cta || 'Ver más'} to={b.link || '/productos'} bg={b.image} />)}
     </div></div></section>
   )
 }

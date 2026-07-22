@@ -44,19 +44,22 @@ const heroSlides = [
   },
 ]
 
-// Convierte un banner del admin al formato de diapositiva del carrusel (solo imagen).
+// Convierte un banner del admin al formato de diapositiva del carrusel.
 const bannerToSlide = (b) => ({
-  img: b.image,
+  theme: b.theme || 'blue',
+  badgeStyle: (!b.theme || b.theme === 'blue') ? 'gold' : 'white',
+  badge: b.badge,
+  title: b.title,
+  sub: b.subtitle,
+  cta: b.cta || 'Ver más',
   to: b.link || '/productos',
-  alt: b.title || b.badge || 'Banner',
+  img: b.image,
 })
 
 const Hero = () => {
   // Banners gestionados en el admin (activos, ubicación = carrusel); si no hay, usa los del diseño.
   const managed = useBanners().filter((b) => b && b.active && (b.slot || 'hero') === 'hero')
-  const slides = managed.length
-    ? managed.map(bannerToSlide)
-    : heroSlides.map((s) => ({ img: s.img, to: s.to, alt: 'Banner' }))
+  const slides = managed.length ? managed.map(bannerToSlide) : heroSlides
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
   const n = slides.length
@@ -70,27 +73,35 @@ const Hero = () => {
   const cur = n ? ((i % n) + n) % n : 0  // índice seguro si cambia el nº de banners
 
   return (
-    <section className="hero-banner">
+    <section className="hero3">
       <div className="container">
-        <div className="hb-viewport" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-          <div className="hb-track" style={{ transform: `translateX(-${cur * 100}%)` }}>
+        <div className="hero3-inner" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+          <div className="hero3-track" style={{ transform: `translateX(-${cur * 100}%)` }}>
             {slides.map((s, idx) => (
-              <Link className="hb-slide" to={s.to} key={idx} aria-hidden={idx !== cur} tabIndex={idx === cur ? 0 : -1}>
-                <img src={s.img} alt={s.alt} />
-              </Link>
+              <div className={`hero3-slide t-${s.theme}`} key={idx} aria-hidden={idx !== cur}>
+                <div className="hero3-content">
+                  {s.badge && <span className={`hero3-badge ${s.badgeStyle}`}><Zap size={14} /> {s.badge}</span>}
+                  <h1>{s.title}</h1>
+                  <p>{s.sub}</p>
+                  <div className="hero3-btns">
+                    <Link className="hero3-btn primary" to={s.to} tabIndex={idx === cur ? 0 : -1}>{s.cta} <ArrowRight size={16} /></Link>
+                    <Link className="hero3-btn ghost" to="/productos" tabIndex={idx === cur ? 0 : -1}>Ver todo</Link>
+                  </div>
+                  <div className="hero3-chips">
+                    {heroChips.map((c) => <span className="hero3-chip" key={c}><Shield size={11} /> {c}</span>)}
+                  </div>
+                </div>
+                <div className="hero3-art"><div className="hero3-card"><ProductImage image={s.img} alt="" style={{ objectFit: 'cover', width: '100%', height: '100%', maxWidth: 'none', maxHeight: 'none' }} /></div></div>
+              </div>
             ))}
           </div>
-          {n > 1 && (
-            <>
-              <button className="hb-arrow left" onClick={() => go(i - 1)} aria-label="Anterior"><ChevronLeft size={20} /></button>
-              <button className="hb-arrow right" onClick={() => go(i + 1)} aria-label="Siguiente"><ChevronRight size={20} /></button>
-              <div className="hb-dots">
-                {slides.map((_, idx) => (
-                  <button key={idx} className={idx === cur ? 'on' : ''} onClick={() => go(idx)} aria-label={`Ir a la diapositiva ${idx + 1}`} />
-                ))}
-              </div>
-            </>
-          )}
+          <button className="hero3-arrow left" onClick={() => go(i - 1)} aria-label="Anterior"><ChevronLeft size={20} /></button>
+          <button className="hero3-arrow right" onClick={() => go(i + 1)} aria-label="Siguiente"><ChevronRight size={20} /></button>
+          <div className="hero3-dots">
+            {slides.map((_, idx) => (
+              <button key={idx} className={idx === cur ? 'on' : ''} onClick={() => go(idx)} aria-label={`Ir a la diapositiva ${idx + 1}`} />
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -313,19 +324,16 @@ const BannerEspecial = () => (
   </div></section>
 )
 
-// Banner promocional gestionado = la imagen COMPLETA y nítida (sin texto
-// superpuesto ni difuminado), igual que el hero. El diseño va en la imagen.
-const PromoBanner = ({ to, bg, alt }) => (
-  <Link className="promo-banner" to={to}><img src={bg} alt={alt} loading="lazy" /></Link>
-)
 // Fila de bloques promocionales gestionados desde el admin (Banners → «Bloque promocional»).
 const PromoRow = ({ items, last }) => {
-  const promos = (items || []).filter((b) => b && b.image)
-  if (!promos.length) return null
-  const cls = promos.length >= 3 ? 'promo-trio' : promos.length === 2 ? 'promo-pair' : 'promo-solo'
+  if (!items || !items.length) return null
+  const cls = items.length >= 3 ? 'promo3-trio' : items.length === 2 ? 'promo3-pair' : 'promo3-solo'
   return (
-    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={`promo-row ${cls}`}>
-      {promos.map((b, i) => <PromoBanner key={b.id ?? i} to={b.link || '/productos'} bg={b.image} alt={b.title || b.badge || 'Promoción'} />)}
+    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={cls}>
+      {items.map((b, i) => (
+        <Promo key={b.id ?? i} theme={b.theme} eyebrow={b.badge} title={b.title}
+          accent={b.accent} sub={b.subtitle} btn={b.cta || 'Ver más'} to={b.link || '/productos'} bg={b.image} />
+      ))}
     </div></div></section>
   )
 }
