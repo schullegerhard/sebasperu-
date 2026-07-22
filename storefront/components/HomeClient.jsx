@@ -6,6 +6,7 @@ import {
   Star, Cart, ShieldCheck, Zap, Lock, Heart, ArrowRight,
 } from './Icons.jsx'
 import { ProductImage } from './imageMap.jsx'
+import { TruckImg, ShieldImg, BoltImg, HeadsetImg, PayImg } from './FeatureIcons.jsx'
 import { peso } from '../lib/catalog.js'
 import { useCart } from './CartProvider.jsx'
 import ProductCard from './ProductCard.jsx'
@@ -61,18 +62,18 @@ const Hero = ({ heroBanners }) => {
   )
 }
 
-/* ---------------- FEATURES ---------------- */
+/* ---------------- FEATURES (ilustraciones a color) ---------------- */
 const features = [
-  { icon: <Truck size={20} />, color: '#2563eb', title: 'Envío gratis', sub: 'En pedidos +S/ 200' },
-  { icon: <ShieldCheck size={20} />, color: '#16a34a', title: 'Garantía oficial', sub: '12 meses de cobertura' },
-  { icon: <Zap size={20} />, color: '#f59e0b', title: 'Entrega rápida', sub: 'Lima: 24-48 horas' },
-  { icon: <Headset size={20} />, color: '#a855f7', title: 'Soporte 24/7', sub: 'Chat y teléfono' },
-  { icon: <Lock size={20} />, color: '#0ea5e9', title: 'Pagos seguros', sub: 'con Mercado Pago' },
+  { icon: <TruckImg />, title: 'Envío gratis', sub: 'En pedidos +S/ 200' },
+  { icon: <ShieldImg />, title: 'Garantía oficial', sub: '12 meses de cobertura' },
+  { icon: <BoltImg />, title: 'Entrega rápida', sub: 'Lima: 24-48 horas' },
+  { icon: <HeadsetImg />, title: 'Soporte 24/7', sub: 'Chat y teléfono' },
+  { icon: <PayImg />, title: 'Pagos seguros', sub: 'con Mercado Pago' },
 ]
 const Features = () => (
   <section className="features-bar"><div className="container"><div className="features2">
     {features.map((f) => (
-      <div className="feature2" key={f.title}><div className="feature2-ic" style={{ color: f.color }}>{f.icon}</div><div><b>{f.title}</b><span>{f.sub}</span></div></div>
+      <div className="feature2" key={f.title}><div className="feature2-ic">{f.icon}</div><div><b>{f.title}</b><span>{f.sub}</span></div></div>
     ))}
   </div></div></section>
 )
@@ -159,22 +160,20 @@ const ProductSection = ({ title, items, to }) => (
   </div></section>
 )
 
-const Promo = ({ theme, eyebrow, title, accent, sub, btn, to, bg }) => (
-  <Link className={`promo3 t-${theme}`} href={to}>
-    {bg && <img className="promo3-bg" src={bg} alt="" loading="lazy" />}
-    <span className="promo3-eyebrow">{eyebrow}</span>
-    <h3 className="promo3-title">{title}</h3>
-    {accent && <div className="promo3-accent">{accent}</div>}
-    <p className="promo3-sub">{sub}</p>
-    <span className="promo3-btn">{btn} <ChevronRight size={14} /></span>
+// Banner promocional = la imagen DISEÑADA completa (estilo Dataplus): sin texto
+// de la app encima y sin opacidad. El arte (oferta, precio, botón) va en la imagen.
+const Promo = ({ to, bg, alt }) => (
+  <Link className="promo-banner" href={to}>
+    <img src={bg} alt={alt} loading="lazy" />
   </Link>
 )
 const PromoRow = ({ items, last }) => {
-  if (!items || !items.length) return null
-  const cls = items.length >= 3 ? 'promo3-trio' : items.length === 2 ? 'promo3-pair' : 'promo3-solo'
+  const promos = (items || []).filter((b) => b && b.image)
+  if (!promos.length) return null
+  const cls = promos.length >= 3 ? 'promo-trio' : promos.length === 2 ? 'promo-pair' : 'promo-solo'
   return (
-    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={cls}>
-      {items.map((b, i) => <Promo key={b.id ?? i} theme={b.theme} eyebrow={b.badge} title={b.title} accent={b.accent} sub={b.subtitle} btn={b.cta || 'Ver más'} to={b.link || '/productos'} bg={b.image} />)}
+    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={`promo-row ${cls}`}>
+      {promos.map((b, i) => <Promo key={b.id ?? i} to={b.link || '/productos'} bg={b.image} alt={b.title || b.badge || 'Promoción'} />)}
     </div></div></section>
   )
 }

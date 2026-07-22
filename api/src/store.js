@@ -6,6 +6,36 @@ import bcrypt from 'bcryptjs'
 import { products as seedProducts, categories as seedCategories } from './catalog.js'
 import { ensureSchema } from './migrate.js'
 import { PAGES_SEED } from './pages-seed.js'
+import { resolveProductSlot, resolveCategorySlot } from './media.js'
+
+// ---- Protección contra el "round-trip" del panel ----
+// La API expone las imágenes como URLs /media/... Si el panel edita y re-guarda
+// un registro, esa URL volvería como valor del campo y PISARÍA el base64
+// original (perdiendo la imagen). Si el valor entrante es una URL /media/...,
+// se conserva el valor ya guardado.
+const OWN_MEDIA = /\/media\/[pbc]\/[^/]+\/([a-z]+\d*)-[0-9a-f]+\.[a-z]+$/i
+const mediaSlot = (v) => { const m = typeof v === 'string' ? v.match(OWN_MEDIA) : null; return m ? m[1] : null }
+const keepStored = (incoming, restore) => {
+  const slot = mediaSlot(incoming)
+  if (!slot) return incoming
+  const prev = restore(slot)
+  return prev != null && prev !== '' ? prev : incoming
+}
+function preserveProductImages(p, cur) {
+  if (!cur) return p
+  p.image = keepStored(p.image, (s) => resolveProductSlot(cur, s))
+  if (Array.isArray(p.gallery)) p.gallery = p.gallery.map((v) => keepStored(v, (s) => resolveProductSlot(cur, s)))
+  if (Array.isArray(p.images)) p.images = p.images.map((v) => keepStored(v, (s) => resolveProductSlot(cur, s)))
+  return p
+}
+function preserveCategoryImages(c, cur) {
+  if (!cur) return c
+  c.image = keepStored(c.image, (s) => resolveCategorySlot(cur, s))
+  c.bannerDesktop = keepStored(c.bannerDesktop, (s) => resolveCategorySlot(cur, s))
+  c.bannerMobile = keepStored(c.bannerMobile, (s) => resolveCategorySlot(cur, s))
+  if (c.seo) c.seo = { ...c.seo, ogImage: keepStored(c.seo.ogImage, (s) => resolveCategorySlot(cur, s)) }
+  return c
+}
 
 let pool = null
 export let usingDb = false
@@ -118,14 +148,14 @@ export async function updateProduct(id, patch) {
   if (usingDb) {
     const cur = (await pool.query('SELECT data FROM products WHERE id=$1', [id])).rows[0]?.data
     if (!cur) return null
-    const p = { ...cur, ...patch, id }
+    const p = preserveProductImages({ ...cur, ...patch, id }, cur)
     await pool.query('UPDATE products SET sku=$2,name=$3,brand=$4,category=$5,subcategory=$6,price=$7,old_price=$8,stock=$9,data=$10 WHERE id=$1',
       [id, p.sku, p.name, p.brand, p.category, p.subcategory, p.price, p.oldPrice || null, p.stock, JSON.stringify(p)])
     return p
   }
   const i = mem.products.findIndex((p) => p.id === id)
   if (i < 0) return null
-  mem.products[i] = { ...mem.products[i], ...patch, id }; return mem.products[i]
+  mem.products[i] = preserveProductImages({ ...mem.products[i], ...patch, id }, mem.products[i]); return mem.products[i]
 }
 export async function removeProduct(id) {
   if (usingDb) { await pool.query('DELETE FROM products WHERE id=$1', [id]); return true }
@@ -147,6 +177,9 @@ export async function getCategoryBySlug(slug) {
 export async function createCategory(input) {
   // Persiste TODOS los campos del módulo (padre, descripción, banners, SEO, flags…).
   const cat = { subcategories: [], ...input, slug: input.slug || slugify(input.name) }
+  // Es un upsert: si la categoría ya existe, protege sus imágenes del round-trip.
+  const prev = await getCategoryBySlug(cat.slug)
+  if (prev) preserveCategoryImages(cat, prev)
   if (usingDb) {
     const pos = input.order != null && input.order !== '' ? Number(input.order)
       : (await pool.query('SELECT COALESCE(MAX(position),0)+1 AS n FROM categories')).rows[0].n
@@ -166,7 +199,7 @@ async function saveCategory(cat) {
 }
 export async function updateCategory(slug, patch) {
   const cat = await getCategoryBySlug(slug); if (!cat) return null
-  return saveCategory({ ...cat, ...patch, slug })
+  return saveCategory(preserveCategoryImages({ ...cat, ...patch, slug }, cat))
 }
 export async function removeCategory(slug) {
   if (usingDb) { await pool.query('DELETE FROM categories WHERE slug=$1', [slug]); return true }
@@ -344,6 +377,7 @@ export async function saveBanner(input) {
       const cur = (await pool.query('SELECT data FROM banners WHERE id=$1', [input.id])).rows[0]?.data
       if (!cur) return null
       const b = { ...cur, ...clean, id: Number(input.id) }
+      b.image = keepStored(b.image, () => cur.image) // round-trip del panel: conserva el base64
       await pool.query('UPDATE banners SET active=$2, data=$3 WHERE id=$1', [b.id, b.active, JSON.stringify(b)])
       return b
     }
@@ -357,7 +391,10 @@ export async function saveBanner(input) {
   if (input.id) {
     const i = mem.banners.findIndex((b) => b.id === Number(input.id))
     if (i < 0) return null
-    mem.banners[i] = { ...mem.banners[i], ...clean, id: Number(input.id) }; return mem.banners[i]
+    const cur = mem.banners[i]
+    mem.banners[i] = { ...cur, ...clean, id: Number(input.id) }
+    mem.banners[i].image = keepStored(mem.banners[i].image, () => cur.image)
+    return mem.banners[i]
   }
   const pos = mem.banners.length ? Math.max(...mem.banners.map((b) => b.position)) + 1 : 0
   const b = { ...clean, id: ++mem.bseq, position: pos }
