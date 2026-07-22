@@ -19,7 +19,15 @@ export async function getAllProducts() {
   return products
 }
 export async function getProductBySlug(slug) {
-  if (API) { try { return await getJSON(`/api/products/${slug}`) } catch { /* fallback */ } }
+  if (API) {
+    try {
+      // Existencia vía el listado (respuesta 200 cacheable): un fetch 404 dentro
+      // del prerender fuerza render dinámico y rompe el HTTP 404 real (soft-404).
+      const all = await getJSON('/api/products')
+      if (!all.some((p) => p.slug === slug)) return null
+      return await getJSON(`/api/products/${slug}`) // ficha completa (galería, textos)
+    } catch { /* fallback */ }
+  }
   return getProduct(slug)
 }
 // Un slug de categoría y todos sus descendientes (campo `parent`), para que una
@@ -50,7 +58,13 @@ export async function getProductsByCategory(slug) {
   return products.filter((p) => scope.has(p.category))
 }
 export async function getCategoryBySlug(slug) {
-  if (API) { try { return await getJSON(`/api/categories/${slug}`) } catch { /* fallback */ } }
+  if (API) {
+    try {
+      // El listado ya trae el registro completo; evita el fetch 404 (ver arriba).
+      const cat = (await getJSON('/api/categories')).find((c) => c.slug === slug)
+      return cat || null
+    } catch { /* fallback */ }
+  }
   return getCategory(slug)
 }
 export async function getCategories() {

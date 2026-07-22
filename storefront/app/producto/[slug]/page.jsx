@@ -20,7 +20,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params
   const p = await getProductBySlug(slug)
-  if (!p) return { title: 'Producto no encontrado', robots: { index: false, follow: false } }
+  // notFound() aquí (y no solo en la página) → HTTP 404 real, no un soft-404
+  // con estado 200 (requisito de renderizado de la auditoría SEO, sección 5).
+  if (!p) notFound()
   const description = productDescription(p)
   const title = p.seo?.metaTitle || p.name
   const ogTitle = p.seo?.ogTitle || p.name

@@ -17,7 +17,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params
   const cat = await getCategoryBySlug(slug)
-  if (!cat) return { title: 'Categoría no encontrada' }
+  // notFound() aquí → HTTP 404 real (no soft-404 con estado 200).
+  if (!cat) notFound()
   const meta = categoryMeta[slug]
   const title = meta?.title || cat.name
   const description = meta?.subtitle || `Compra ${cat.name} en SebasPeru. Filtra por marca, precio y disponibilidad. Envíos a todo el Perú.`

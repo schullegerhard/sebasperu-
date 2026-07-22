@@ -39,7 +39,8 @@ export async function generateMetadata({ params }) {
   const managed = await getPageBySlug(page)
   const c = COPY[page]
   const title = managed?.title || c?.title
-  if (!title) return { title: 'Legal' }
+  // notFound() aquí → HTTP 404 real (no soft-404 con estado 200).
+  if (!title) notFound()
   // Descripción dinámica a partir del contenido de la página (HTML gestionado o
   // el texto por defecto), recortada para el snippet de buscadores.
   const raw = managed?.body ? managed.body.replace(/<[^>]+>/g, ' ') : (c?.body?.join(' ') || '')
