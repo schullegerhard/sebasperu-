@@ -13,8 +13,8 @@ import { getCustomer } from '../services/account.js'
 import { track } from '../lib/analytics.js'
 
 export const Logo = ({ footer, variant = 'inner' }) => (
-  <Link to="/" className="logo" aria-label="SEBASTPERU — Inicio">
-    <img src="/logo.png" alt="SEBASTPERU — Suministros y Tecnología" className="logo-img" width="190" height="44" />
+  <Link to="/" className="logo" aria-label="SebasPeru — Inicio">
+    <img src="/logo.png" alt="SebasPeru — Suministros y Tecnología" className="logo-img" width="190" height="44" />
   </Link>
 )
 
@@ -23,7 +23,7 @@ const TopBar = () => (
     <div className="container">
       <div className="tb-left">
         <span className="tb-item"><Phone size={14} /> (01) 700-4000</span>
-        <span className="tb-item"><Mail size={14} /> ventas@sebastperu.pe</span>
+        <span className="tb-item"><Mail size={14} /> ventas@sebasperu.com</span>
         <span className="tb-item"><MapPin size={14} /> Lima, Perú</span>
       </div>
       <div className="tb-right">

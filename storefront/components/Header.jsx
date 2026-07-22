@@ -97,7 +97,7 @@ function PredictiveSearch() {
 }
 
 const MainHeader = ({ onMenu }) => {
-  const { count, total } = useCart()
+  const { count, total, openCart } = useCart()
   const [customer, setCustomer] = useState(null)
   useEffect(() => {
     const sync = () => setCustomer(getCustomer())
@@ -123,13 +123,14 @@ const MainHeader = ({ onMenu }) => {
               <Link href="/cuenta" className="btn-register">Regístrate</Link>
             </>
           )}
-          <Link href="/carrito" className="cart-action">
+          {/* Abre el panel lateral del carrito (mini-cart), igual que App 1. */}
+          <button type="button" onClick={openCart} className="cart-action">
             <span className="cart-ic">
               <Cart size={20} />
               {count > 0 && <span className="cart-badge">{count}</span>}
             </span>
             <span className="ca-col"><small>MI CARRITO</small><b>{peso(total).replace('.00', '')}</b></span>
-          </Link>
+          </button>
         </div>
       </div>
     </header>

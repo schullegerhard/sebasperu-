@@ -14,7 +14,7 @@ const COVER = { objectFit: 'cover', width: '100%', height: '100%', maxWidth: 'no
 const CATEGORY_INFO = {
   'laptops-pc': {
     title: 'Laptops para trabajo, estudio y gaming',
-    description: 'Encuentra la laptop ideal para cada necesidad. En SEBASTPERU contamos con los mejores modelos de HP, Lenovo, Dell, Asus y más marcas líderes con garantía oficial. Procesadores Intel Core de última generación y AMD Ryzen para máximo rendimiento.',
+    description: 'Encuentra la laptop ideal para cada necesidad. En SebasPeru contamos con los mejores modelos de HP, Lenovo, Dell, Asus y más marcas líderes con garantía oficial. Procesadores Intel Core de última generación y AMD Ryzen para máximo rendimiento.',
     bullets: ['Garantía oficial de fábrica 12 meses', 'Procesadores Intel Core i5, i7 y AMD Ryzen 5, 7', 'Memoria RAM desde 8 GB hasta 32 GB', 'Almacenamiento SSD NVMe de alta velocidad', 'Envío a todo el Perú en 24-48 horas'],
     image: '/img/photo-1611186871348-b1ce696e52c9.jpg', bg: '#eef3ff',
   },

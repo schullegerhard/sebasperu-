@@ -2,6 +2,7 @@ import './globals.css'
 import CartProvider from '../components/CartProvider.jsx'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
+import CartDrawer from '../components/CartDrawer.jsx'
 import FloatingWhatsApp from '../components/FloatingWhatsApp.jsx'
 import { ORIGIN, SITE, organizationJsonLd, websiteJsonLd, JsonLd } from '../lib/seo.js'
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
           <Header />
           <main>{children}</main>
           <Footer />
+          <CartDrawer />
           <FloatingWhatsApp />
         </CartProvider>
       </body>

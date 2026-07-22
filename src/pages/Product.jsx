@@ -191,7 +191,10 @@ export default function Product() {
               <span className="pdp-free"><Truck size={11} /> ENVÍO GRATIS</span>
               <span className="pdp-sku">SKU: {p.sku}</span>
             </div>
-            <div className="pdp-rating"><Stars value={p.rating} /> <span>({p.reviews.toLocaleString('es-PE')} valoraciones de clientes)</span></div>
+            {/* Solo mostramos estrellas si hay reseñas reales (auditoría SEO 2.3). */}
+            {p.reviews > 0
+              ? <div className="pdp-rating"><Stars value={p.rating} /> <span>({p.reviews.toLocaleString('es-PE')} valoraciones de clientes)</span></div>
+              : <div className="pdp-rating pdp-rating-empty"><span>Sé el primero en valorar este producto</span></div>}
             <h1 className="pdp-title">{p.name}</h1>
             {p.shortDesc && <p className="pdp-shortdesc">{p.shortDesc}</p>}
             <div className="pdp-price">
@@ -204,7 +207,8 @@ export default function Product() {
               <p className="pdp-cuota-txt">6 cuotas de <b>{peso(cuota).replace('.00', '')}</b> sin intereses</p>
             </div>
             {/* Las especificaciones se muestran solo en la pestaña "Especificaciones" (abajo). */}
-            <div className="pdp-sold">🔥 <span>85 vendidos en las últimas 48 horas</span></div>
+            {/* Urgencia de ventas: solo con dato real del backend (auditoría SEO 4.9). */}
+            {Number(p.soldRecently) > 0 && <div className="pdp-sold">🔥 <span>{p.soldRecently} vendidos en las últimas 48 horas</span></div>}
             <div className="pdp-cuotas">
               <div><small>Paga en 6 cuotas sin intereses</small><b>{peso(cuota).replace('.00', '')} / cuota</b></div>
               <div className="pdp-cuotas-cards"><span className="pay visa">VISA</span><span className="mc"><i /><i /></span></div>
@@ -236,7 +240,7 @@ export default function Product() {
               <button className="pdp-buy" onClick={buyNow}><Zap size={14} /> Comprar ahora</button>
               <div className="pdp-trust">
                 <Shield size={13} />
-                <div><b>Disponible en SEBASTPERU</b><small>Normalmente está listo en 24 horas</small></div>
+                <div><b>Disponible en SebasPeru</b><small>Normalmente está listo en 24 horas</small></div>
               </div>
             </div>
 
@@ -271,7 +275,7 @@ export default function Product() {
                     <>
                       <p className="lead">{p.name}</p>
                       <p>Producto original con garantía oficial de fábrica. Ideal para uso profesional y personal. Cuenta con las últimas tecnologías para garantizar el mejor rendimiento y durabilidad.</p>
-                      <p>En SEBASTPERU ofrecemos únicamente productos auténticos de las mejores marcas con factura y garantía oficial, respaldados por nuestro equipo de soporte técnico especializado en Lima y provincias.</p>
+                      <p>En SebasPeru ofrecemos únicamente productos auténticos de las mejores marcas con factura y garantía oficial, respaldados por nuestro equipo de soporte técnico especializado en Lima y provincias.</p>
                     </>
                   )}
                 {p.faq.length > 0 && (
@@ -293,24 +297,32 @@ export default function Product() {
               </table>
             )}
             {tab === 'reviews' && (
-              <div className="pdp-reviews">
-                <div className="pdp-rev-summary">
-                  <div className="pdp-rev-score"><b>{p.rating}</b><Stars value={p.rating} /><small>{p.reviews.toLocaleString('es-PE')} reseñas</small></div>
-                  <div className="pdp-rev-bars">
-                    {[5, 4, 3, 2, 1].map((r) => (
-                      <div className="pdp-rev-bar" key={r}><span>{r}</span><Star size={11} /><div className="track"><i style={{ width: r === 5 ? '72%' : r === 4 ? '18%' : r === 3 ? '7%' : '2%' }} /></div></div>
+              p.reviews > 0 ? (
+                <div className="pdp-reviews">
+                  <div className="pdp-rev-summary">
+                    <div className="pdp-rev-score"><b>{p.rating}</b><Stars value={p.rating} /><small>{p.reviews.toLocaleString('es-PE')} reseñas</small></div>
+                    <div className="pdp-rev-bars">
+                      {[5, 4, 3, 2, 1].map((r) => (
+                        <div className="pdp-rev-bar" key={r}><span>{r}</span><Star size={11} /><div className="track"><i style={{ width: r === 5 ? '72%' : r === 4 ? '18%' : r === 3 ? '7%' : '2%' }} /></div></div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="pdp-rev-list">
+                    {REVIEWS.map((rev) => (
+                      <div className="pdp-rev" key={rev.name}>
+                        <div className="pdp-rev-head"><span className="av">{rev.name[0]}</span><div><b>{rev.name}</b><small>{rev.date}</small></div><Stars value={rev.rating} /></div>
+                        <p>{rev.text}</p>
+                      </div>
                     ))}
                   </div>
                 </div>
-                <div className="pdp-rev-list">
-                  {REVIEWS.map((rev) => (
-                    <div className="pdp-rev" key={rev.name}>
-                      <div className="pdp-rev-head"><span className="av">{rev.name[0]}</span><div><b>{rev.name}</b><small>{rev.date}</small></div><Stars value={rev.rating} /></div>
-                      <p>{rev.text}</p>
-                    </div>
-                  ))}
+              ) : (
+                // Sin reseñas reales no mostramos valoraciones inventadas (auditoría SEO 2.3).
+                <div className="pdp-reviews pdp-reviews-empty">
+                  <p>Este producto aún no tiene reseñas.</p>
+                  <p className="muted small">Sé el primero en compartir tu opinión tras tu compra.</p>
                 </div>
-              </div>
+              )
             )}
           </div>
         </div>

@@ -8,6 +8,10 @@ export default function CartProvider({ children }) {
   const [cart, setCart] = useState([])
   const [ready, setReady] = useState(false)
   const [toast, setToast] = useState(null)
+  // Panel lateral del carrito (mini-cart), igual que App 1.
+  const [cartOpen, setCartOpen] = useState(false)
+  const openCart = useCallback(() => setCartOpen(true), [])
+  const closeCart = useCallback(() => setCartOpen(false), [])
 
   // Hidratar desde localStorage tras montar (evita desajustes SSR/cliente).
   useEffect(() => {
@@ -20,10 +24,10 @@ export default function CartProvider({ children }) {
     setCart((prev) => {
       const f = prev.find((i) => i.id === p.id)
       if (f) return prev.map((i) => (i.id === p.id ? { ...i, qty: i.qty + qty } : i))
-      return [...prev, { id: p.id, sku: p.sku, name: p.name, price: p.price, image: p.image, slug: p.slug, qty }]
+      const href = p.slug ? `/producto/${p.slug}` : '/productos'
+      return [...prev, { id: p.id, sku: p.sku, name: p.name, price: p.price, image: p.image, tint: p.tint, label: p.label, brand: p.brand, slug: p.slug, href, qty }]
     })
-    setToast(`${p.name} agregado al carrito`)
-    clearTimeout(addToCart._t); addToCart._t = setTimeout(() => setToast(null), 2200)
+    setCartOpen(true) // abre el panel lateral del carrito (como App 1)
   }, [])
 
   const updateQty = useCallback((id, qty) => {
@@ -36,7 +40,7 @@ export default function CartProvider({ children }) {
   const total = cart.reduce((n, i) => n + i.qty * i.price, 0)
 
   return (
-    <CartContext.Provider value={{ cart, count, total, ready, addToCart, updateQty, removeItem, clearCart }}>
+    <CartContext.Provider value={{ cart, count, total, ready, addToCart, updateQty, removeItem, clearCart, cartOpen, openCart, closeCart }}>
       {children}
       {toast && <div className="toast">{toast}</div>}
     </CartContext.Provider>

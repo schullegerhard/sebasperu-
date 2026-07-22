@@ -29,7 +29,7 @@ export function MinimalFooter() {
           ¿Necesitas ayuda? Escríbenos por WhatsApp
           <a href="https://wa.me/51925552042" target="_blank" rel="noreferrer"><Whatsapp size={17} /> 925 552 042</a>
         </p>
-        <span className="fm-copy">© 2024 SEBASTPERU. Todos los derechos reservados.</span>
+        <span className="fm-copy">© {new Date().getFullYear()} SebasPeru. Todos los derechos reservados.</span>
       </div>
     </footer>
   )
@@ -83,7 +83,7 @@ export default function Footer() {
       <div className="container">
         <div className="footer2-grid">
           <div className="footer2-news">
-            <img src="/logo.png" alt="SEBASTPERU" className="footer2-logo" width="170" height="40" />
+            <img src="/logo.png" alt="SebasPeru" className="footer2-logo" width="170" height="40" />
             <h4>Suscríbete a nuestro newsletter</h4>
             <p>Al suscribirte, aceptas nuestros términos de servicio y política de privacidad. Puedes darte de baja en cualquier momento.</p>
             <form className="news2" onSubmit={submit}>
@@ -121,7 +121,7 @@ export default function Footer() {
 
       <div className="footer2-bottom">
         <div className="container">
-          <span className="copy">© 2025 SEBASTPERU S.A.C. — Suministros y Tecnología — Lima, Perú</span>
+          <span className="copy">© {new Date().getFullYear()} SebasPeru S.A.C. — Suministros y Tecnología — Lima, Perú</span>
           <PaymentMarks />
         </div>
       </div>
