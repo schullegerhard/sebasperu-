@@ -15,6 +15,8 @@ export const metadata = {
   openGraph: { type: 'website', locale: 'es_PE', siteName: SITE, url: ORIGIN },
   robots: { index: true, follow: true },
   icons: { icon: '/favicon.svg' },
+  // Verificación de la propiedad en Google Search Console (sebasperu.com).
+  verification: { google: 'aut9AUjTEOKgudkmIs9vxCXSeED0o56TkrqWw-6PDOY' },
 }
 
 export const viewport = { themeColor: '#1b4dd8' }

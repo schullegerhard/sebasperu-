@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import CategoryFilters from '../../../components/CategoryFilters.jsx'
 import { ChevronRight } from '../../../components/Icons.jsx'
 import { getCategoryBySlug, getProductsByCategory, getCategories, getAttributes, categoryMeta } from '../../../lib/data.js'
-import { ORIGIN, breadcrumbJsonLd, JsonLd } from '../../../lib/seo.js'
+import { ORIGIN, breadcrumbJsonLd, absUrl, JsonLd } from '../../../lib/seo.js'
 
 export const revalidate = 60
 
@@ -20,12 +20,26 @@ export async function generateMetadata({ params }) {
   // notFound() aquí → HTTP 404 real (no soft-404 con estado 200).
   if (!cat) notFound()
   const meta = categoryMeta[slug]
-  const title = meta?.title || cat.name
-  const description = meta?.subtitle || `Compra ${cat.name} en SebasPeru. Filtra por marca, precio y disponibilidad. Envíos a todo el Perú.`
+  // SEO configurado en el panel (Admin → Categorías → SEO) manda sobre lo demás.
+  const seo = cat.seo || {}
+  const metaTitle = (seo.metaTitle || '').trim()
+  const fallbackTitle = meta?.title || cat.name
+  const description = (seo.metaDescription || '').trim() || meta?.subtitle
+    || `Compra ${cat.name} en SebasPeru. Filtra por marca, precio y disponibilidad. Envíos a todo el Perú.`
+  const ogTitle = (seo.ogTitle || '').trim() || metaTitle || fallbackTitle
+  const ogDescription = (seo.ogDescription || '').trim() || description
+  const ogImage = absUrl(seo.ogImage)
   return {
-    title, description,
-    alternates: { canonical: `/categoria/${slug}` },
-    openGraph: { title, description, url: `${ORIGIN}/categoria/${slug}` },
+    // Si el panel define un Meta Title, se usa EXACTO (sin añadir «| SebasPeru»).
+    title: metaTitle ? { absolute: metaTitle } : fallbackTitle,
+    description,
+    alternates: { canonical: (seo.canonical || '').trim() || `/categoria/${slug}` },
+    openGraph: {
+      title: ogTitle, description: ogDescription, url: `${ORIGIN}/categoria/${slug}`,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+    twitter: { card: 'summary_large_image', title: ogTitle, description: ogDescription },
+    ...(seo.robots === 'noindex' ? { robots: { index: false, follow: true } } : {}),
   }
 }
 

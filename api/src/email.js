@@ -24,7 +24,7 @@ function orderHtml(order) {
     </tr>`).join('')
   return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#0f1c2e">
     <div style="background:#1a56ff;color:#fff;padding:22px 24px;border-radius:12px 12px 0 0">
-      <h1 style="margin:0;font-size:20px">SEBASTPERU</h1>
+      <h1 style="margin:0;font-size:20px">SebasPeru</h1>
     </div>
     <div style="border:1px solid #e8ecf3;border-top:none;border-radius:0 0 12px 12px;padding:24px">
       <h2 style="font-size:18px;margin:0 0 6px">¡Gracias por tu compra!</h2>
@@ -40,7 +40,7 @@ function orderHtml(order) {
 
 function shell(title, bodyHtml) {
   return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#0f1c2e">
-    <div style="background:#1a56ff;color:#fff;padding:22px 24px;border-radius:12px 12px 0 0"><h1 style="margin:0;font-size:20px">SEBASTPERU</h1></div>
+    <div style="background:#1a56ff;color:#fff;padding:22px 24px;border-radius:12px 12px 0 0"><h1 style="margin:0;font-size:20px">SebasPeru</h1></div>
     <div style="border:1px solid #e8ecf3;border-top:none;border-radius:0 0 12px 12px;padding:24px">${bodyHtml}</div>
   </div>`
 }

@@ -202,6 +202,12 @@ export default function CheckoutClient() {
                 <div className="co-field"><input placeholder="RUC" inputMode="numeric" className={errors.ruc ? 'err' : ''} value={data.ruc} onChange={setF('ruc')} />{err('ruc')}</div>
               </>
             )}
+            {/* Contacto SIEMPRE visible arriba: el correo recibe la confirmación del pedido. */}
+            <div className="co-grid2">
+              <div className="co-field"><input placeholder="Teléfono" inputMode="tel" autoComplete="tel" className={errors.phone ? 'err' : ''} value={data.phone} onChange={setF('phone')} />{err('phone')}</div>
+              <div className="co-field"><input type="email" inputMode="email" autoComplete="email" placeholder="Correo electrónico" className={errors.email ? 'err' : ''} value={data.email} onChange={setF('email')} />{err('email')}</div>
+            </div>
+            <p className="co-sub" style={{ marginTop: -4 }}>Te enviaremos la confirmación y el detalle de tu pedido a este correo.</p>
 
             <Seg value={data.delivery} onChange={(v) => set('delivery', v)} options={[
               { id: 'domicilio', label: 'Envío a domicilio', icon: <Truck size={16} /> },
@@ -236,10 +242,6 @@ export default function CheckoutClient() {
             ) : (
               <div className="co-note"><MapPin size={16} /> Recoge tu pedido en <b>Av. Tecnología 123, Lima</b> — listo en 24 horas.</div>
             )}
-            <div className="co-grid2">
-              <div className="co-field"><input placeholder="Teléfono" inputMode="tel" autoComplete="tel" className={errors.phone ? 'err' : ''} value={data.phone} onChange={setF('phone')} />{err('phone')}</div>
-              <div className="co-field"><input type="email" inputMode="email" autoComplete="email" placeholder="Correo electrónico" className={errors.email ? 'err' : ''} value={data.email} onChange={setF('email')} />{err('email')}</div>
-            </div>
           </section>
 
           {/* Quién recibirá */}
