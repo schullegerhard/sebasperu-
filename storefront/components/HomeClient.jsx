@@ -19,10 +19,12 @@ const heroSlides = [
   { theme: 'orange', badgeStyle: 'white', badge: 'NUEVA COLECCIÓN 2024', title: <>Laptops HP, Dell<br />y Lenovo desde<br />S/ 1,899</>, sub: 'Procesadores Intel Core i5 e i7 de 12ª y 13ª generación. Cuotas sin intereses.', cta: 'Ver Laptops', to: '/categoria/laptops-pc', img: '/img/photo-1517336714731-489689fd1ca8.jpg' },
   { theme: 'green', badgeStyle: 'white', badge: 'STOCK DISPONIBLE', title: <>Tóner original<br />para impresoras<br />laser</>, sub: 'HP, Samsung, Brother y Epson. Entrega en 24 horas en Lima.', cta: 'Ver Tóner', to: '/categoria/toner', img: '/img/photo-1586953208448-b95a79798f07.jpg' },
 ]
-const bannerToSlide = (b) => ({ theme: b.theme || 'blue', badgeStyle: (!b.theme || b.theme === 'blue') ? 'gold' : 'white', badge: b.badge, title: b.title, sub: b.subtitle, cta: b.cta || 'Ver más', to: b.link || '/productos', img: b.image })
+const bannerToSlide = (b) => ({ img: b.image, to: b.link || '/productos', alt: b.title || b.badge || 'Banner' })
 
 const Hero = ({ heroBanners }) => {
-  const slides = heroBanners.length ? heroBanners.map(bannerToSlide) : heroSlides
+  const slides = heroBanners.length
+    ? heroBanners.map(bannerToSlide)
+    : heroSlides.map((s) => ({ img: s.img, to: s.to, alt: 'Banner' }))
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
   const n = slides.length
@@ -34,33 +36,25 @@ const Hero = ({ heroBanners }) => {
   }, [paused, n])
   const cur = n ? ((i % n) + n) % n : 0
   return (
-    <section className="hero3">
+    <section className="hero-banner">
       <div className="container">
-        <div className="hero3-inner" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-          <div className="hero3-track" style={{ transform: `translateX(-${cur * 100}%)` }}>
+        <div className="hb-viewport" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+          <div className="hb-track" style={{ transform: `translateX(-${cur * 100}%)` }}>
             {slides.map((s, idx) => (
-              <div className={`hero3-slide t-${s.theme}`} key={idx} aria-hidden={idx !== cur}>
-                <div className="hero3-content">
-                  {s.badge && <span className={`hero3-badge ${s.badgeStyle}`}><Zap size={14} /> {s.badge}</span>}
-                  <h1>{s.title}</h1>
-                  <p>{s.sub}</p>
-                  <div className="hero3-btns">
-                    <Link className="hero3-btn primary" href={s.to} tabIndex={idx === cur ? 0 : -1}>{s.cta} <ArrowRight size={16} /></Link>
-                    <Link className="hero3-btn ghost" href="/productos" tabIndex={idx === cur ? 0 : -1}>Ver todo</Link>
-                  </div>
-                  <div className="hero3-chips">
-                    {heroChips.map((c) => <span className="hero3-chip" key={c}><Shield size={11} /> {c}</span>)}
-                  </div>
-                </div>
-                <div className="hero3-art"><div className="hero3-card"><ProductImage image={s.img} alt="" style={COVER} /></div></div>
-              </div>
+              <Link className="hb-slide" href={s.to} key={idx} aria-hidden={idx !== cur} tabIndex={idx === cur ? 0 : -1}>
+                <img src={s.img} alt={s.alt} />
+              </Link>
             ))}
           </div>
-          <button className="hero3-arrow left" onClick={() => go(i - 1)} aria-label="Anterior"><ChevronLeft size={20} /></button>
-          <button className="hero3-arrow right" onClick={() => go(i + 1)} aria-label="Siguiente"><ChevronRight size={20} /></button>
-          <div className="hero3-dots">
-            {slides.map((_, idx) => <button key={idx} className={idx === cur ? 'on' : ''} onClick={() => go(idx)} aria-label={`Ir a la diapositiva ${idx + 1}`} />)}
-          </div>
+          {n > 1 && (
+            <>
+              <button className="hb-arrow left" onClick={() => go(i - 1)} aria-label="Anterior"><ChevronLeft size={20} /></button>
+              <button className="hb-arrow right" onClick={() => go(i + 1)} aria-label="Siguiente"><ChevronRight size={20} /></button>
+              <div className="hb-dots">
+                {slides.map((_, idx) => <button key={idx} className={idx === cur ? 'on' : ''} onClick={() => go(idx)} aria-label={`Ir a la diapositiva ${idx + 1}`} />)}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

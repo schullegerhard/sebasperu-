@@ -629,6 +629,22 @@
 @media (max-width: 900px) { .hero3-art { display: none; } .hero3-content h1 { font-size: 30px; } .hero3-slide { grid-template-columns: 1fr; padding: 20px 24px; } }
 @media (prefers-reduced-motion: reduce) { .hero3-track { transition: none; } }
 
+/* ============ Hero banner: carrusel de imagen completa (sin texto, sin sombra) ============ */
+.hero-banner { padding: 0 0 16px; }
+.hero-banner .container { max-width: 1400px; }
+.hb-viewport { position: relative; border-radius: 12px; overflow: hidden; }
+.hb-track { display: flex; transition: transform .6s cubic-bezier(.4, 0, .2, 1); }
+.hb-slide { flex: 0 0 100%; display: block; }
+.hb-slide img { width: 100%; height: auto; display: block; }
+.hb-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 4; width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .7); color: #111; }
+.hb-arrow:hover { background: rgba(255, 255, 255, .92); }
+.hb-arrow.left { left: 14px; } .hb-arrow.right { right: 14px; }
+.hb-dots { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 7px; z-index: 4; }
+.hb-dots button { width: 8px; height: 8px; padding: 0; border: 0; cursor: pointer; border-radius: 50%; background: rgba(255, 255, 255, .55); transition: width .25s, background .25s; }
+.hb-dots button.on { background: #fff; width: 26px; border-radius: 5px; }
+@media (max-width: 600px) { .hb-arrow { width: 32px; height: 32px; } .hb-arrow.left { left: 8px; } .hb-arrow.right { right: 8px; } }
+@media (prefers-reduced-motion: reduce) { .hb-track { transition: none; } }
+
 /* ============ Features: banda blanca de ancho completo (diseño) ============ */
 .features-bar { background: #fff; border-bottom: 1px solid var(--line); }
 .features2 { grid-template-columns: repeat(5, 1fr); border: none; border-radius: 0; box-shadow: none; margin-top: 0; background: transparent; }
