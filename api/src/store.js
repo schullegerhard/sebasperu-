@@ -93,6 +93,11 @@ export async function getProductBySlug(slug) {
   if (usingDb) return (await pool.query('SELECT data FROM products WHERE slug=$1', [slug])).rows[0]?.data || null
   return mem.products.find((p) => p.slug === slug) || null
 }
+// Producto COMPLETO por id (lo usa /media/* para leer la imagen base64 del slot).
+export async function getProductById(id) {
+  if (usingDb) return (await pool.query('SELECT data FROM products WHERE id=$1', [id])).rows[0]?.data || null
+  return mem.products.find((p) => p.id === Number(id)) || null
+}
 export async function productsByCategory(catSlug) {
   if (usingDb) return (await pool.query('SELECT data FROM products WHERE category=$1 ORDER BY id', [catSlug])).rows.map((r) => r.data)
   return mem.products.filter((p) => p.category === catSlug)
@@ -357,6 +362,10 @@ export async function saveBanner(input) {
   const pos = mem.banners.length ? Math.max(...mem.banners.map((b) => b.position)) + 1 : 0
   const b = { ...clean, id: ++mem.bseq, position: pos }
   mem.banners.push(b); return b
+}
+export async function getBannerById(id) {
+  if (usingDb) return (await pool.query('SELECT data FROM banners WHERE id=$1', [id])).rows[0]?.data || null
+  return mem.banners.find((b) => b.id === Number(id)) || null
 }
 export async function removeBanner(id) {
   if (usingDb) { await pool.query('DELETE FROM banners WHERE id=$1', [id]); return true }

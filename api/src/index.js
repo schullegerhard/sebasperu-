@@ -8,15 +8,16 @@ import { dirname, resolve, join } from 'node:path'
 import { existsSync } from 'node:fs'
 import {
   initStore, usingDb,
-  listProducts, getProductBySlug, productsByCategory, createProduct, updateProduct, removeProduct, setStock,
+  listProducts, getProductBySlug, getProductById, productsByCategory, createProduct, updateProduct, removeProduct, setStock,
   listCategories, getCategoryBySlug, createCategory, updateCategory, removeCategory, addSubcategory, removeSubcategory, moveCategory,
   listOrders, createOrder, setOrderStatus,
   listCustomers, findCustomerByEmail, createCustomer, ordersByEmail,
   listCoupons, saveCoupon, removeCoupon, toggleCoupon, getSettings, saveSettings,
   listAttributes, saveAttribute, removeAttribute,
-  listBanners, saveBanner, removeBanner, toggleBanner, moveBanner,
+  listBanners, saveBanner, removeBanner, toggleBanner, moveBanner, getBannerById,
   listPages, savePage, removePage,
 } from './store.js'
+import { hash8, transformProduct, transformBanner, slotFromFile, resolveProductSlot, decodeDataUrl } from './media.js'
 import compression from 'compression'
 import { login, requireAuth, requireRole, customerToken, requireCustomer } from './auth.js'
 import { loginRateLimit, recordLoginResult, securityHeaders } from './security.js'
@@ -42,6 +43,8 @@ app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next
 
 const ok = (res, data) => res.json(data)
 const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((e) => { console.error(e); res.status(500).json({ error: e.message }) })
+// Origen público de la API (para construir URLs absolutas de imágenes /media/*).
+const apiOrigin = (req) => process.env.PUBLIC_URL || `${req.protocol}://${req.get('host')}`
 
 /* --------------------------- salud + auth --------------------------- */
 app.get('/api/health', (req, res) => res.json({ status: 'ok', db: usingDb ? 'postgres' : 'memory', time: new Date().toISOString() }))
@@ -88,10 +91,10 @@ app.get('/api/account/me', requireCustomer, (req, res) => res.json({ id: req.cus
 app.get('/api/account/orders', requireCustomer, wrap(async (req, res) => ok(res, await ordersByEmail(req.customer.email))))
 
 /* ----------------------- PRODUCTOS (lectura pública) ----------------------- */
-app.get('/api/products', wrap(async (req, res) => ok(res, await listProducts())))
+app.get('/api/products', wrap(async (req, res) => ok(res, (await listProducts()).map((p) => transformProduct(p, apiOrigin(req))))))
 app.get('/api/products/:slug', wrap(async (req, res) => {
   const p = await getProductBySlug(req.params.slug)
-  return p ? ok(res, p) : res.status(404).json({ error: 'Producto no encontrado' })
+  return p ? ok(res, transformProduct(p, apiOrigin(req))) : res.status(404).json({ error: 'Producto no encontrado' })
 }))
 // Escritura (solo Administrador; stock también Almacén)
 app.post('/api/products', requireAuth, requireRole(), wrap(async (req, res) => res.status(201).json(await createProduct(req.body))))
@@ -108,7 +111,7 @@ app.get('/api/categories/:slug', wrap(async (req, res) => {
   const c = await getCategoryBySlug(req.params.slug)
   return c ? ok(res, c) : res.status(404).json({ error: 'Categoría no encontrada' })
 }))
-app.get('/api/categories/:slug/products', wrap(async (req, res) => ok(res, await productsByCategory(req.params.slug))))
+app.get('/api/categories/:slug/products', wrap(async (req, res) => ok(res, (await productsByCategory(req.params.slug)).map((p) => transformProduct(p, apiOrigin(req))))))
 app.post('/api/categories', requireAuth, requireRole(), wrap(async (req, res) => res.status(201).json(await createCategory(req.body))))
 app.put('/api/categories/:slug', requireAuth, requireRole(), wrap(async (req, res) => ok(res, await updateCategory(req.params.slug, req.body))))
 app.delete('/api/categories/:slug', requireAuth, requireRole(), wrap(async (req, res) => { await removeCategory(req.params.slug); res.json({ ok: true }) }))
@@ -179,7 +182,7 @@ app.put('/api/attributes/:id', requireAuth, requireRole(), wrap(async (req, res)
 app.delete('/api/attributes/:id', requireAuth, requireRole(), wrap(async (req, res) => { await removeAttribute(Number(req.params.id)); res.json({ ok: true }) }))
 
 // Banners del carrusel principal (lectura pública para la tienda; escritura Marketing).
-app.get('/api/banners', wrap(async (req, res) => ok(res, await listBanners())))
+app.get('/api/banners', wrap(async (req, res) => ok(res, (await listBanners()).map((b) => transformBanner(b, apiOrigin(req))))))
 app.post('/api/banners', requireAuth, requireRole('Marketing'), wrap(async (req, res) => res.status(201).json(await saveBanner(req.body))))
 app.put('/api/banners/:id', requireAuth, requireRole('Marketing'), wrap(async (req, res) => ok(res, await saveBanner({ ...req.body, id: Number(req.params.id) }))))
 app.delete('/api/banners/:id', requireAuth, requireRole('Marketing'), wrap(async (req, res) => { await removeBanner(Number(req.params.id)); res.json({ ok: true }) }))
@@ -192,13 +195,34 @@ app.post('/api/pages', requireAuth, requireRole('Marketing'), wrap(async (req, r
 app.put('/api/pages/:id', requireAuth, requireRole('Marketing'), wrap(async (req, res) => ok(res, await savePage({ ...req.body, id: Number(req.params.id) }))))
 app.delete('/api/pages/:id', requireAuth, requireRole('Marketing'), wrap(async (req, res) => { await removePage(Number(req.params.id)); res.json({ ok: true }) }))
 
+/* --------------------------- IMÁGENES (/media) --------------------------- */
+// Sirve una imagen base64 (de producto o banner) como archivo cacheable.
+function serveImage(req, res, dec) {
+  if (!dec) return res.status(404).end()
+  const etag = `"${hash8(dec.buffer)}"`
+  if (req.headers['if-none-match'] === etag) return res.status(304).end()
+  res.set('Content-Type', dec.mime)
+  // Inmutable: la URL incluye el hash del contenido → si cambia, cambia la URL.
+  res.set('Cache-Control', 'public, max-age=31536000, immutable')
+  res.set('ETag', etag)
+  return res.send(dec.buffer)
+}
+app.get('/media/p/:id/:file', wrap(async (req, res) => {
+  const p = await getProductById(Number(req.params.id))
+  serveImage(req, res, decodeDataUrl(resolveProductSlot(p, slotFromFile(req.params.file))))
+}))
+app.get('/media/b/:id/:file', wrap(async (req, res) => {
+  const b = await getBannerById(Number(req.params.id))
+  serveImage(req, res, decodeDataUrl(b?.image))
+}))
+
 // Sirve el front-end (build de Vite) en el mismo origen, si existe el dist.
 // Así un solo dominio expone la tienda/admin (SPA) y la API (/api/*).
 const dist = resolve(dirname(fileURLToPath(import.meta.url)), '../../dist')
 if (existsSync(dist)) {
   app.use(express.static(dist))
   app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) return next()
+    if (req.path.startsWith('/api') || req.path.startsWith('/media')) return next()
     res.sendFile(join(dist, 'index.html'))
   })
   console.log('🖥️  Sirviendo front-end (SPA) desde /dist')
