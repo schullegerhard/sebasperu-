@@ -40,18 +40,30 @@ const TopBar = () => (
 function PredictiveSearch() {
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
+  const [items, setItems] = useState(products) // catálogo REAL (API); demo solo como respaldo
   const boxRef = useRef(null)
   const router = useRouter()
+
+  // Sugerencias con los productos REALES de la tienda (no el catálogo de ejemplo),
+  // así los enlaces del desplegable existen y no dan 404.
+  useEffect(() => {
+    const API = process.env.NEXT_PUBLIC_API_URL
+    if (!API) return
+    fetch(`${API}/api/products`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (Array.isArray(d) && d.length) setItems(d) })
+      .catch(() => {})
+  }, [])
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase()
     if (term.length < 2) return []
-    return products
+    return items
       .filter((p) =>
         (p.name || '').toLowerCase().includes(term) || (p.sku || '').toLowerCase().includes(term) ||
         (p.brand || '').toLowerCase().includes(term) || (p.model || '').toLowerCase().includes(term))
       .slice(0, 6)
-  }, [q])
+  }, [q, items])
 
   useEffect(() => {
     const onClick = (e) => { if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false) }
