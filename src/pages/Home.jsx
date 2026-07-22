@@ -313,16 +313,19 @@ const BannerEspecial = () => (
   </div></section>
 )
 
+// Banner promocional gestionado = la imagen COMPLETA y nítida (sin texto
+// superpuesto ni difuminado), igual que el hero. El diseño va en la imagen.
+const PromoBanner = ({ to, bg, alt }) => (
+  <Link className="promo-banner" to={to}><img src={bg} alt={alt} loading="lazy" /></Link>
+)
 // Fila de bloques promocionales gestionados desde el admin (Banners → «Bloque promocional»).
 const PromoRow = ({ items, last }) => {
-  if (!items || !items.length) return null
-  const cls = items.length >= 3 ? 'promo3-trio' : items.length === 2 ? 'promo3-pair' : 'promo3-solo'
+  const promos = (items || []).filter((b) => b && b.image)
+  if (!promos.length) return null
+  const cls = promos.length >= 3 ? 'promo-trio' : promos.length === 2 ? 'promo-pair' : 'promo-solo'
   return (
-    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={cls}>
-      {items.map((b, i) => (
-        <Promo key={b.id ?? i} theme={b.theme} eyebrow={b.badge} title={b.title}
-          accent={b.accent} sub={b.subtitle} btn={b.cta || 'Ver más'} to={b.link || '/productos'} bg={b.image} />
-      ))}
+    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={`promo-row ${cls}`}>
+      {promos.map((b, i) => <PromoBanner key={b.id ?? i} to={b.link || '/productos'} bg={b.image} alt={b.title || b.badge || 'Promoción'} />)}
     </div></div></section>
   )
 }

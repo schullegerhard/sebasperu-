@@ -8,6 +8,7 @@ import { useSeo } from '../lib/seo.js'
 import { track } from '../lib/analytics.js'
 import { Orders, Pay } from '../services/api.js'
 import { getCustomer } from '../services/account.js'
+import { departamentos, provincias, distritos, titleCase } from '../data/ubigeo.js'
 
 // Métodos de pago (todos habilitados). Mercado Pago solo si la API lo tiene configurado.
 const PAYMENTS = [
@@ -35,8 +36,6 @@ const Seg = ({ value, onChange, options }) => (
   </div>
 )
 
-// Checkout de una sola página estilo WooCommerce: izquierda = detalles de
-// facturación/envío; derecha = "Tu pedido" (resumen + pago + términos + botón).
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useStore()
   const acct = getCustomer() // si hay sesión de cliente, se precargan sus datos
@@ -44,9 +43,12 @@ export default function Checkout() {
     firstName: '', lastName: '',
     comprobante: 'boleta', // boleta | factura
     doc: '', razonSocial: '', ruc: '',
-    phone: '', email: acct?.email || '',
     delivery: 'domicilio', // domicilio | tienda
-    department: '', province: '', district: '', address: '', reference: '',
+    address: '', reference: '',
+    department: '', province: '', district: '', // UBIGEO en cascada
+    phone: '', email: acct?.email || '',
+    recipient: 'yo', // yo | otra
+    recipientName: '', recipientPhone: '',
     shipping: '',
     notes: '',
     payment: 'contraentrega',
@@ -60,8 +62,6 @@ export default function Checkout() {
   const [mpAvailable, setMpAvailable] = useState(false)
   useSeo({ title: 'Checkout', path: '/checkout', description: 'Finaliza tu compra en SebasPeru de forma rápida y segura.' })
 
-  // ¿Está Mercado Pago disponible? Si sí, se ofrece y queda por defecto. Además,
-  // al volver del pago (?status=success) se confirma el pedido y se vacía el carrito.
   useEffect(() => {
     if (acct?.name) {
       const parts = acct.name.trim().split(' ')
@@ -75,16 +75,18 @@ export default function Checkout() {
 
   const set = (k, v) => setData((d) => {
     const next = { ...d, [k]: v }
-    if (k === 'delivery') next.shipping = '' // al cambiar tipo de entrega, reinicia el método de envío
+    if (k === 'delivery') next.shipping = ''
     return next
   })
   const clearErr = (k) => setErrors((e) => (e[k] ? { ...e, [k]: undefined } : e))
   const setF = (k) => (ev) => { set(k, ev.target.value); clearErr(k) }
+  const setDept = (v) => { setData((d) => ({ ...d, department: v, province: '', district: '', shipping: '' })); clearErr('department') }
+  const setProv = (v) => { setData((d) => ({ ...d, province: v, district: '', shipping: '' })); clearErr('province') }
+  const setDist = (v) => { setData((d) => ({ ...d, district: v, shipping: '' })); clearErr('district') }
 
-  // Opciones de envío según el tipo de entrega y si hay dirección.
   const shippingOptions = data.delivery === 'tienda'
     ? [{ id: 'retiro', label: 'Retiro en tienda', desc: 'Av. Tecnología 123, Lima · Listo en 24h', price: 0 }]
-    : (data.address.trim()
+    : (data.district
       ? [
         { id: 'estandar', label: 'Envío estándar', desc: '2 a 4 días hábiles', price: 15 },
         { id: 'express', label: 'Envío express', desc: 'Recíbelo en 24 horas (Lima)', price: 25 },
@@ -104,14 +106,15 @@ export default function Checkout() {
       if (!data.razonSocial.trim()) e.razonSocial = 'Ingresa la razón social.'
       if (!/^\d{11}$/.test(data.ruc.trim())) e.ruc = 'El RUC debe tener 11 dígitos.'
     }
+    if (data.delivery === 'domicilio') {
+      if (!data.address.trim()) e.address = 'Ingresa tu dirección de entrega.'
+      if (!data.department) e.department = 'Selecciona el departamento.'
+      if (!data.province) e.province = 'Selecciona la provincia.'
+      if (!data.district) e.district = 'Selecciona el distrito.'
+    }
     if (!data.phone.trim()) e.phone = 'Ingresa un teléfono de contacto.'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) e.email = 'Ingresa un correo válido para enviarte el detalle de tu pedido.'
-    if (data.delivery === 'domicilio') {
-      if (!data.department.trim()) e.department = 'Ingresa el departamento.'
-      if (!data.province.trim()) e.province = 'Ingresa la provincia.'
-      if (!data.district.trim()) e.district = 'Ingresa el distrito.'
-      if (!data.address.trim()) e.address = 'Ingresa tu dirección de entrega.'
-    }
+    if (data.recipient === 'otra' && !data.recipientName.trim()) e.recipientName = 'Indica quién recibirá el pedido.'
     if (shippingOptions.length && !data.shipping) e.shipping = 'Selecciona un método de envío.'
     if (!data.terms) e.terms = 'Debes aceptar los términos y condiciones para continuar.'
     return e
@@ -127,12 +130,11 @@ export default function Checkout() {
     if (submitting) return
     setSubmitting(true)
     track('purchase', { value: total, payment: data.payment, coupon: applied })
-    const region = data.delivery === 'tienda' ? 'Retiro en tienda' : (data.department.trim() || 'Lima')
+    const region = data.delivery === 'tienda' ? 'Retiro en tienda' : [titleCase(data.district), titleCase(data.department)].filter(Boolean).join(', ') || 'Lima'
     const items = cart.map((i) => ({ name: i.name, qty: i.qty, price: i.price }))
     const customer = `${data.firstName} ${data.lastName}`.trim() || 'Cliente invitado'
     const email = data.email.trim() || '—'
 
-    // Mercado Pago: crea el pedido y redirige a la pasarela (Checkout Pro).
     if (data.payment === 'mercadopago') {
       try {
         const { init_point } = await Pay.mercadopago({ customer, email, total, region, items })
@@ -145,7 +147,6 @@ export default function Checkout() {
       }
     }
 
-    // Otros métodos: registra el pedido (el correo de confirmación se envía en la API).
     try {
       await Orders.create({ customer, email, total, payment: PAYMENTS.find((p) => p.id === data.payment)?.label || data.payment, region, date: new Date().toISOString().slice(0, 10), items })
     } catch { /* la API puede no estar corriendo; no bloquea la compra */ }
@@ -176,53 +177,85 @@ export default function Checkout() {
   return (
     <div className="container page checkout2">
       <div className="co2-layout">
-        {/* ----- Columna izquierda: datos de facturación / envío ----- */}
+        {/* ----- Columna izquierda ----- */}
         <div className="co2-main">
           <section className="co-card">
-            <h3 className="co-h">Detalles de facturación</h3>
+            <h3 className="co-h">Datos de entrega</h3>
             <Seg value={data.comprobante} onChange={(v) => set('comprobante', v)} options={[
               { id: 'boleta', label: 'Boleta' },
               { id: 'factura', label: 'Factura' },
             ]} />
             <div className="co-grid2">
-              <div className="co-field"><input placeholder="Nombre *" className={errors.firstName ? 'err' : ''} value={data.firstName} onChange={setF('firstName')} />{err('firstName')}</div>
-              <div className="co-field"><input placeholder="Apellidos *" className={errors.lastName ? 'err' : ''} value={data.lastName} onChange={setF('lastName')} />{err('lastName')}</div>
+              <div className="co-field"><input placeholder="Nombre" className={errors.firstName ? 'err' : ''} value={data.firstName} onChange={setF('firstName')} />{err('firstName')}</div>
+              <div className="co-field"><input placeholder="Apellidos" className={errors.lastName ? 'err' : ''} value={data.lastName} onChange={setF('lastName')} />{err('lastName')}</div>
             </div>
             {data.comprobante === 'boleta' ? (
-              <div className="co-field"><input placeholder="DNI o CE *" className={errors.doc ? 'err' : ''} value={data.doc} onChange={setF('doc')} />{err('doc')}</div>
+              <div className="co-field"><input placeholder="DNI o CE" className={errors.doc ? 'err' : ''} value={data.doc} onChange={setF('doc')} />{err('doc')}</div>
             ) : (
               <>
-                <div className="co-field"><input placeholder="Razón social *" className={errors.razonSocial ? 'err' : ''} value={data.razonSocial} onChange={setF('razonSocial')} />{err('razonSocial')}</div>
-                <div className="co-field"><input placeholder="RUC *" inputMode="numeric" className={errors.ruc ? 'err' : ''} value={data.ruc} onChange={setF('ruc')} />{err('ruc')}</div>
+                <div className="co-field"><input placeholder="Razón social" className={errors.razonSocial ? 'err' : ''} value={data.razonSocial} onChange={setF('razonSocial')} />{err('razonSocial')}</div>
+                <div className="co-field"><input placeholder="RUC" inputMode="numeric" className={errors.ruc ? 'err' : ''} value={data.ruc} onChange={setF('ruc')} />{err('ruc')}</div>
               </>
             )}
-            <div className="co-grid2">
-              <div className="co-field"><input placeholder="Teléfono *" inputMode="tel" autoComplete="tel" className={errors.phone ? 'err' : ''} value={data.phone} onChange={setF('phone')} />{err('phone')}</div>
-              <div className="co-field"><input type="email" inputMode="email" autoComplete="email" placeholder="Correo electrónico *" className={errors.email ? 'err' : ''} value={data.email} onChange={setF('email')} />{err('email')}</div>
-            </div>
-          </section>
 
-          <section className="co-card">
-            <h3 className="co-h">Entrega</h3>
             <Seg value={data.delivery} onChange={(v) => set('delivery', v)} options={[
               { id: 'domicilio', label: 'Envío a domicilio', icon: <Truck size={16} /> },
               { id: 'tienda', label: 'Retiro en tienda', icon: <MapPin size={16} /> },
             ]} />
             {data.delivery === 'domicilio' ? (
               <>
-                <div className="co-grid2">
-                  <div className="co-field"><input placeholder="Departamento *" className={errors.department ? 'err' : ''} value={data.department} onChange={setF('department')} />{err('department')}</div>
-                  <div className="co-field"><input placeholder="Provincia *" className={errors.province ? 'err' : ''} value={data.province} onChange={setF('province')} />{err('province')}</div>
-                </div>
-                <div className="co-field"><input placeholder="Distrito *" className={errors.district ? 'err' : ''} value={data.district} onChange={setF('district')} />{err('district')}</div>
-                <div className="co-field"><input placeholder="Dirección (calle, número) *" className={errors.address ? 'err' : ''} value={data.address} onChange={setF('address')} />{err('address')}</div>
+                <div className="co-field"><input placeholder="Dirección de entrega" className={errors.address ? 'err' : ''} value={data.address} onChange={setF('address')} />{err('address')}</div>
                 <div className="co-field"><input placeholder="Referencia (opcional)" value={data.reference} onChange={setF('reference')} /></div>
+                <div className="co-grid3">
+                  <div className="co-field">
+                    <select className={errors.department ? 'err' : ''} value={data.department} onChange={(e) => setDept(e.target.value)}>
+                      <option value="">Departamento</option>
+                      {departamentos.map((d) => <option key={d} value={d}>{titleCase(d)}</option>)}
+                    </select>{err('department')}
+                  </div>
+                  <div className="co-field">
+                    <select className={errors.province ? 'err' : ''} value={data.province} disabled={!data.department} onChange={(e) => setProv(e.target.value)}>
+                      <option value="">Provincia</option>
+                      {provincias(data.department).map((p) => <option key={p} value={p}>{titleCase(p)}</option>)}
+                    </select>{err('province')}
+                  </div>
+                  <div className="co-field">
+                    <select className={errors.district ? 'err' : ''} value={data.district} disabled={!data.province} onChange={(e) => setDist(e.target.value)}>
+                      <option value="">Distrito</option>
+                      {distritos(data.department, data.province).map((x) => <option key={x} value={x}>{titleCase(x)}</option>)}
+                    </select>{err('district')}
+                  </div>
+                </div>
               </>
             ) : (
               <div className="co-note"><MapPin size={16} /> Recoge tu pedido en <b>Av. Tecnología 123, Lima</b> — listo en 24 horas.</div>
             )}
-            {shippingOptions.length > 0 && (
-              <div className="co-ship-list" style={{ marginTop: 12 }}>
+            <div className="co-grid2">
+              <div className="co-field"><input placeholder="Teléfono" inputMode="tel" autoComplete="tel" className={errors.phone ? 'err' : ''} value={data.phone} onChange={setF('phone')} />{err('phone')}</div>
+              <div className="co-field"><input type="email" inputMode="email" autoComplete="email" placeholder="Correo electrónico" className={errors.email ? 'err' : ''} value={data.email} onChange={setF('email')} />{err('email')}</div>
+            </div>
+          </section>
+
+          <section className="co-card">
+            <h3 className="co-h">¿Quién recibirá el pedido?</h3>
+            <Seg value={data.recipient} onChange={(v) => set('recipient', v)} options={[
+              { id: 'yo', label: 'Yo' },
+              { id: 'otra', label: 'Otra persona' },
+            ]} />
+            {data.recipient === 'otra' && (
+              <div className="co-grid2">
+                <div className="co-field"><input placeholder="Nombre de quien recibe" className={errors.recipientName ? 'err' : ''} value={data.recipientName} onChange={setF('recipientName')} />{err('recipientName')}</div>
+                <div className="co-field"><input placeholder="Teléfono de contacto" value={data.recipientPhone} onChange={setF('recipientPhone')} /></div>
+              </div>
+            )}
+          </section>
+
+          <section className="co-card">
+            <h3 className="co-h">Métodos de envío</h3>
+            {shippingOptions.length === 0 ? (
+              <div className="co-ship-empty">Completa tu departamento, provincia y distrito para ver las opciones de envío.</div>
+            ) : (
+              <div className="co-ship-list">
                 {shippingOptions.map((o) => (
                   <label key={o.id} className={`co-ship ${data.shipping === o.id ? 'on' : ''}`}>
                     <input type="radio" name="ship" checked={data.shipping === o.id} onChange={() => { set('shipping', o.id); clearErr('shipping') }} />
@@ -236,14 +269,23 @@ export default function Checkout() {
           </section>
 
           <section className="co-card">
-            <h3 className="co-h">Notas del pedido (opcional)</h3>
-            <div className="co-field">
-              <textarea rows={3} placeholder="Notas sobre tu pedido, p. ej. instrucciones de entrega." value={data.notes} onChange={setF('notes')} style={{ resize: 'vertical', minHeight: 72 }} />
+            <h3 className="co-h">Pago</h3>
+            <p className="co-sub">Todas las transacciones son seguras y están encriptadas.</p>
+            <div className="co2-pays">
+              {payments.map((p) => (
+                <label key={p.id} className={`co2-pay ${data.payment === p.id ? 'on' : ''}`}>
+                  <input type="radio" name="pay" checked={data.payment === p.id} onChange={() => set('payment', p.id)} />
+                  <span className="co2-pay-ic">{p.icon}</span>
+                  <span className="co2-pay-txt"><b>{p.label}</b><small>{p.desc}</small></span>
+                  {p.rec && <span className="co2-rec">Recomendado</span>}
+                </label>
+              ))}
             </div>
+            <div className="co2-secure-note"><Lock size={18} /><div><b>Todos tus datos están protegidos</b><span>Esta información es segura y encriptada.</span></div></div>
           </section>
         </div>
 
-        {/* ----- Columna derecha: "Tu pedido" (resumen + pago) ----- */}
+        {/* ----- Columna derecha: "Tu pedido" ----- */}
         <aside className="co2-side">
           <div className="co2-summary">
             <h3>Tu pedido</h3>
@@ -269,19 +311,6 @@ export default function Checkout() {
             </div>
             <div className="co2-total"><div><b>Total a pagar</b><small>Incluye IGV</small></div><span className="co2-total-val">{peso(total)}</span></div>
 
-            {/* Métodos de pago (dentro de "Tu pedido", como WooCommerce) */}
-            <div className="co2-pays" style={{ marginTop: 6 }}>
-              {payments.map((p) => (
-                <label key={p.id} className={`co2-pay ${data.payment === p.id ? 'on' : ''}`}>
-                  <input type="radio" name="pay" checked={data.payment === p.id} onChange={() => set('payment', p.id)} />
-                  <span className="co2-pay-ic">{p.icon}</span>
-                  <span className="co2-pay-txt"><b>{p.label}</b><small>{p.desc}</small></span>
-                  {p.rec && <span className="co2-rec">Recomendado</span>}
-                </label>
-              ))}
-            </div>
-
-            {/* Aceptación de términos (obligatorio para realizar el pedido) */}
             <label className="co2-terms-accept" style={{ display: 'flex', gap: 9, alignItems: 'flex-start', fontSize: 13, margin: '14px 0 4px', lineHeight: 1.45 }}>
               <input type="checkbox" checked={data.terms} onChange={(e) => { set('terms', e.target.checked); clearErr('terms') }} style={{ marginTop: 3, flex: 'none' }} />
               <span>He leído y acepto los <Link to="/legal/terminos">términos y condiciones</Link> y la <Link to="/legal/privacidad">política de privacidad</Link>.</span>
@@ -290,7 +319,7 @@ export default function Checkout() {
 
             {errors.pay && <p className="co-err" style={{ margin: '6px 0' }}>{errors.pay}</p>}
             <button className="co2-pay-btn" onClick={pay} disabled={submitting}>{submitting ? 'Procesando…' : <>Realizar el pedido <Lock size={16} /></>}</button>
-            <div className="co2-secure-note" style={{ marginTop: 12 }}><Lock size={18} /><div><b>Compra 100% segura</b><span>Tus datos y pago están protegidos y encriptados.</span></div></div>
+            <div className="co2-safe" style={{ marginTop: 12 }}><span className="co2-safe-ic"><ShieldCheck size={22} /></span><div><b>Compra 100% segura</b><span>Tus datos y pago están protegidos en cada paso de tu compra.</span></div></div>
           </div>
         </aside>
       </div>

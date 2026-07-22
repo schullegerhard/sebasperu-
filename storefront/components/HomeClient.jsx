@@ -159,22 +159,20 @@ const ProductSection = ({ title, items, to }) => (
   </div></section>
 )
 
-const Promo = ({ theme, eyebrow, title, accent, sub, btn, to, bg }) => (
-  <Link className={`promo3 t-${theme}`} href={to}>
-    {bg && <img className="promo3-bg" src={bg} alt="" loading="lazy" />}
-    <span className="promo3-eyebrow">{eyebrow}</span>
-    <h3 className="promo3-title">{title}</h3>
-    {accent && <div className="promo3-accent">{accent}</div>}
-    <p className="promo3-sub">{sub}</p>
-    <span className="promo3-btn">{btn} <ChevronRight size={14} /></span>
+// Banner promocional = la imagen COMPLETA y nítida (sin texto superpuesto ni
+// difuminado), igual que el hero. El diseño va dentro de la propia imagen.
+const Promo = ({ to, bg, alt }) => (
+  <Link className="promo-banner" href={to}>
+    <img src={bg} alt={alt} loading="lazy" />
   </Link>
 )
 const PromoRow = ({ items, last }) => {
-  if (!items || !items.length) return null
-  const cls = items.length >= 3 ? 'promo3-trio' : items.length === 2 ? 'promo3-pair' : 'promo3-solo'
+  const promos = (items || []).filter((b) => b && b.image)
+  if (!promos.length) return null
+  const cls = promos.length >= 3 ? 'promo-trio' : promos.length === 2 ? 'promo-pair' : 'promo-solo'
   return (
-    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={cls}>
-      {items.map((b, i) => <Promo key={b.id ?? i} theme={b.theme} eyebrow={b.badge} title={b.title} accent={b.accent} sub={b.subtitle} btn={b.cta || 'Ver más'} to={b.link || '/productos'} bg={b.image} />)}
+    <section className={`section2${last ? ' last-sec' : ''}`}><div className="container"><div className={`promo-row ${cls}`}>
+      {promos.map((b, i) => <Promo key={b.id ?? i} to={b.link || '/productos'} bg={b.image} alt={b.title || b.badge || 'Promoción'} />)}
     </div></div></section>
   )
 }

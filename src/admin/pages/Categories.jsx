@@ -6,6 +6,7 @@ import { ImageUpload, RichText, Toggle, Tabs, SearchSelect } from '../fields.jsx
 import { ProductImage } from '../../components/imageMap.jsx'
 import { Plus, Pencil, Trash, Eye } from '../../components/Icons.jsx'
 import { slugify } from '../../lib/util.js'
+import { storeUrl } from '../store-url.js'
 
 const FORM_TABS = ['General', 'Imágenes y banners', 'SEO', 'Visibilidad']
 const emptyCat = () => ({
@@ -78,7 +79,7 @@ export default function Categories() {
   return (
     <div>
       <PageHead title="Categorías" subtitle={`${cats.length} categorías · ${cats.filter((c) => c.parent).length} subcategorías`}>
-        <a className="adm-btn ghost" href="/" target="_blank" rel="noreferrer"><Eye size={15} /> Ver categorías</a>
+        <a className="adm-btn ghost" href={storeUrl('/')} target="_blank" rel="noreferrer"><Eye size={15} /> Ver categorías</a>
         {editable && <button className="adm-btn primary" onClick={openNew}><Plus size={16} /> Nueva categoría</button>}
       </PageHead>
 
@@ -100,7 +101,7 @@ export default function Categories() {
                 <td><span className="adm-menuflags">{c.showMenu !== false && <em>Web</em>}{c.showMobile !== false && <em>Móvil</em>}{c.showFooter && <em>Footer</em>}</span></td>
                 <td>{c.active === false ? <span className="adm-status cancel">Inactiva</span> : <span className="adm-status done">Activa</span>}</td>
                 <td><div className="adm-rowactions">
-                  <a href={`/categoria/${c.slug}`} target="_blank" rel="noreferrer" title="Ver categoría en la tienda"><Eye size={15} /></a>
+                  <a href={storeUrl(`/categoria/${c.slug}`)} target="_blank" rel="noreferrer" title="Ver categoría en la tienda"><Eye size={15} /></a>
                   {editable && <button onClick={() => openEdit({ ...c, _isEdit: true, _origSlug: c.slug })} title="Editar"><Pencil size={15} /></button>}
                   {editable && <button className="danger" onClick={() => setDel(c)} title="Eliminar"><Trash size={15} /></button>}
                 </div></td>

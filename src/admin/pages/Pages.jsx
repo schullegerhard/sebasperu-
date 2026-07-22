@@ -5,6 +5,7 @@ import { PageHead, Modal, useAsync, Spinner } from '../components.jsx'
 import { RichText, Toggle } from '../fields.jsx'
 import { Plus, Pencil, Trash, Eye } from '../../components/Icons.jsx'
 import { slugify } from '../../lib/util.js'
+import { storeUrl } from '../store-url.js'
 
 const blank = { slug: '', title: '', body: '', active: true }
 
@@ -50,7 +51,7 @@ export default function Pages() {
                 <td className="muted small">/legal/{p.slug}</td>
                 <td>{p.active === false ? <span className="adm-status cancel">Oculta</span> : <span className="adm-status done">Visible</span>}</td>
                 {editable && <td><div className="adm-rowactions">
-                  <a href={`/legal/${p.slug}`} target="_blank" rel="noreferrer" title="Ver en la tienda"><Eye size={15} /></a>
+                  <a href={storeUrl(`/legal/${p.slug}`)} target="_blank" rel="noreferrer" title="Ver en la tienda"><Eye size={15} /></a>
                   <button onClick={() => openEdit(p)} title="Editar"><Pencil size={15} /></button>
                   <button className="danger" onClick={() => setDel(p)} title="Eliminar"><Trash size={15} /></button>
                 </div></td>}

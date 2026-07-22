@@ -6,6 +6,7 @@ import { ImageUpload, Gallery, RichText, TagInput, AttrList, FaqList, Toggle, Ta
 import { ProductImage } from '../../components/imageMap.jsx'
 import { Plus, Pencil, Trash, Search, Eye } from '../../components/Icons.jsx'
 import { peso, slugify } from '../../lib/util.js'
+import { storeUrl } from '../store-url.js'
 
 const TABS = ['General', 'Precios e inventario', 'Multimedia', 'Atributos', 'Compatibilidad y docs', 'Relacionados', 'SEO y social', 'Logística']
 const STATUSES = ['Activo', 'Borrador', 'Agotado', 'Descontinuado']
@@ -82,7 +83,7 @@ export default function Products() {
   return (
     <div>
       <PageHead title="Productos" subtitle={`${rows.length} productos en catálogo`}>
-        <a className="adm-btn ghost" href="/productos" target="_blank" rel="noreferrer"><Eye size={15} /> Ver productos</a>
+        <a className="adm-btn ghost" href={storeUrl('/productos')} target="_blank" rel="noreferrer"><Eye size={15} /> Ver productos</a>
         {editable && <button className="adm-btn primary" onClick={openNew}><Plus size={16} /> Nuevo producto</button>}
       </PageHead>
 
@@ -105,7 +106,7 @@ export default function Products() {
                 <td><b>{peso(p.price)}</b></td>
                 <td><span className={`adm-stockpill ${p.stock <= 5 ? 'crit' : p.stock <= (p.minStock || 10) ? 'warn' : 'ok'}`}>{p.stock}</span></td>
                 <td><div className="adm-rowactions">
-                  <a href={`/producto/${p.slug}`} target="_blank" rel="noreferrer" title="Ver producto en la tienda"><Eye size={15} /></a>
+                  <a href={storeUrl(`/producto/${p.slug}`)} target="_blank" rel="noreferrer" title="Ver producto en la tienda"><Eye size={15} /></a>
                   {editable && <button onClick={() => openEdit(p)} title="Editar"><Pencil size={15} /></button>}
                   {editable && <button className="danger" onClick={() => setDel(p)} title="Eliminar"><Trash size={15} /></button>}
                 </div></td>
