@@ -42,6 +42,26 @@ export function transformBanner(b, origin) {
   return { ...b, image: urlFor(origin, 'b', b.id, 'main', b.image) }
 }
 
+// Categorías: imagen de tarjeta/menú, banners destacados y OG image (clave = slug).
+export function transformCategory(c, origin) {
+  if (!c || typeof c !== 'object') return c
+  const out = { ...c }
+  if (isDataUrl(c.image)) out.image = urlFor(origin, 'c', c.slug, 'main', c.image)
+  if (isDataUrl(c.bannerDesktop)) out.bannerDesktop = urlFor(origin, 'c', c.slug, 'bd', c.bannerDesktop)
+  if (isDataUrl(c.bannerMobile)) out.bannerMobile = urlFor(origin, 'c', c.slug, 'bm', c.bannerMobile)
+  if (c.seo && isDataUrl(c.seo.ogImage)) out.seo = { ...c.seo, ogImage: urlFor(origin, 'c', c.slug, 'og', c.seo.ogImage) }
+  return out
+}
+
+export function resolveCategorySlot(c, slot) {
+  if (!c) return null
+  if (slot === 'main') return c.image
+  if (slot === 'bd') return c.bannerDesktop
+  if (slot === 'bm') return c.bannerMobile
+  if (slot === 'og') return c.seo?.ogImage
+  return null
+}
+
 // "slot-hash.ext" → "main" | "g0" | "i2" (los slots no llevan guiones).
 export const slotFromFile = (file) => String(file || '').split('-')[0]
 

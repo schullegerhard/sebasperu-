@@ -17,7 +17,7 @@ import {
   listBanners, saveBanner, removeBanner, toggleBanner, moveBanner, getBannerById,
   listPages, savePage, removePage,
 } from './store.js'
-import { hash8, transformProduct, transformBanner, slotFromFile, resolveProductSlot, decodeDataUrl } from './media.js'
+import { hash8, transformProduct, transformBanner, transformCategory, slotFromFile, resolveProductSlot, resolveCategorySlot, decodeDataUrl } from './media.js'
 import compression from 'compression'
 import { login, requireAuth, requireRole, customerToken, requireCustomer } from './auth.js'
 import { loginRateLimit, recordLoginResult, securityHeaders } from './security.js'
@@ -106,10 +106,10 @@ app.delete('/api/products/:id', requireAuth, requireRole(), wrap(async (req, res
 app.patch('/api/products/:id/stock', requireAuth, requireRole('Almacén'), wrap(async (req, res) => ok(res, await setStock(Number(req.params.id), Number(req.body.stock)))))
 
 /* ----------------------- CATEGORÍAS (lectura pública) ----------------------- */
-app.get('/api/categories', wrap(async (req, res) => ok(res, await listCategories())))
+app.get('/api/categories', wrap(async (req, res) => ok(res, (await listCategories()).map((c) => transformCategory(c, apiOrigin(req))))))
 app.get('/api/categories/:slug', wrap(async (req, res) => {
   const c = await getCategoryBySlug(req.params.slug)
-  return c ? ok(res, c) : res.status(404).json({ error: 'Categoría no encontrada' })
+  return c ? ok(res, transformCategory(c, apiOrigin(req))) : res.status(404).json({ error: 'Categoría no encontrada' })
 }))
 app.get('/api/categories/:slug/products', wrap(async (req, res) => ok(res, (await productsByCategory(req.params.slug)).map((p) => transformProduct(p, apiOrigin(req))))))
 app.post('/api/categories', requireAuth, requireRole(), wrap(async (req, res) => res.status(201).json(await createCategory(req.body))))
@@ -214,6 +214,10 @@ app.get('/media/p/:id/:file', wrap(async (req, res) => {
 app.get('/media/b/:id/:file', wrap(async (req, res) => {
   const b = await getBannerById(Number(req.params.id))
   serveImage(req, res, decodeDataUrl(b?.image))
+}))
+app.get('/media/c/:slug/:file', wrap(async (req, res) => {
+  const c = await getCategoryBySlug(req.params.slug)
+  serveImage(req, res, decodeDataUrl(resolveCategorySlot(c, slotFromFile(req.params.file))))
 }))
 
 // Sirve el front-end (build de Vite) en el mismo origen, si existe el dist.

@@ -1,6 +1,11 @@
 import Link from 'next/link'
 import Breadcrumbs from '../../components/Breadcrumbs.jsx'
 
+// Revalidación corta: sin esto la página es 100% estática y se sirve con
+// Cache-Control s-maxage de 1 año → tras un redeploy la caché seguiría
+// mostrando la versión anterior.
+export const revalidate = 300
+
 export const metadata = {
   title: 'Comparador de productos',
   description: 'Compara productos de tecnología lado a lado en SebasPeru.',
