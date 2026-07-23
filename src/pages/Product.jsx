@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { http } from '../services/http.js'
 import { ProductImage } from '../components/imageMap.jsx'
-import { Truck, Zap, MapPin, Shield, Cart, Star, Plus, ChevronRight } from '../components/Icons.jsx'
+import { Truck, Zap, MapPin, Shield, Cart, Star, Plus, ChevronLeft, ChevronRight } from '../components/Icons.jsx'
 import { getProduct, getCategory, products, peso } from '../data/catalog.js'
 import { findStoreProduct, storeByCategory, productSlug } from '../data/storefront.js'
 import { useStore } from '../context/StoreContext.jsx'
@@ -96,6 +96,9 @@ export default function Product() {
   const [tab, setTab] = useState('desc')
   const [added, setAdded] = useState(false)
   const [imgIdx, setImgIdx] = useState(0)
+  // Galería: rotación automática (pausada al pasar el mouse) + manual (deslizar).
+  const [galPaused, setGalPaused] = useState(false)
+  const touchX = useRef(null)
   // El listado es liviano (sin galería/descripción larga para cargar rápido); la
   // ficha pide el producto COMPLETO por slug y fusiona esos campos pesados.
   const [full, setFull] = useState(null)
@@ -132,6 +135,16 @@ export default function Product() {
 
   // Reinicia la imagen activa al cambiar de producto.
   useEffect(() => { setImgIdx(0) }, [slug])
+
+  // Rotación automática de la galería (cada 5 s); al elegir manualmente el
+  // temporizador se reinicia (imgIdx en deps).
+  const galN = p?.images?.length || 0
+  useEffect(() => {
+    if (galPaused || galN <= 1) return undefined
+    const id = setInterval(() => setImgIdx((x) => (x + 1) % galN), 5000)
+    return () => clearInterval(id)
+  }, [galPaused, galN, imgIdx])
+  const galGo = (k) => { if (galN) setImgIdx(((k % galN) + galN) % galN) }
 
   useSeo(p
     ? {
@@ -179,10 +192,27 @@ export default function Product() {
             ))}
           </div>
 
-          {/* Main image (imagen activa de la galería; sin `seed` por lo mismo) */}
-          <div className="pdp-stage">
+          {/* Main image: rotación automática + manual (flechas, deslizar, miniaturas) */}
+          <div
+            className="pdp-stage"
+            onMouseEnter={() => setGalPaused(true)}
+            onMouseLeave={() => setGalPaused(false)}
+            onTouchStart={(e) => { touchX.current = e.touches[0].clientX }}
+            onTouchEnd={(e) => {
+              if (touchX.current == null) return
+              const dx = e.changedTouches[0].clientX - touchX.current
+              if (Math.abs(dx) > 40) galGo(imgIdx + (dx < 0 ? 1 : -1))
+              touchX.current = null
+            }}
+          >
             <ProductImage image={p.images[imgIdx] || p.image} tint={p.tint} label={p.label} brand={p.brand} style={CONTAIN} />
             {hasOff && <span className="pdp-disc">-{discount}%</span>}
+            {galN > 1 && (
+              <>
+                <button type="button" className="pdp-arrow left" onClick={() => galGo(imgIdx - 1)} aria-label="Imagen anterior"><ChevronLeft size={18} /></button>
+                <button type="button" className="pdp-arrow right" onClick={() => galGo(imgIdx + 1)} aria-label="Imagen siguiente"><ChevronRight size={18} /></button>
+              </>
+            )}
           </div>
 
           {/* Info */}
