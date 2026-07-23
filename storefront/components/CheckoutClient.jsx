@@ -135,7 +135,15 @@ export default function CheckoutClient() {
     const items = cart.map((i) => ({ name: i.name, qty: i.qty, price: i.price }))
     const customer = `${data.firstName} ${data.lastName}`.trim() || 'Cliente invitado'
     const email = data.email.trim() || '—'
-    const order = { customer, email, total, region, items }
+    // Dirección completa para el despacho (va en el aviso interno a la tienda).
+    const address = data.delivery === 'tienda'
+      ? 'Retiro en tienda — Av. Tecnología 123, Lima'
+      : [
+        data.address.trim() + (data.reference.trim() ? ` (Ref: ${data.reference.trim()})` : ''),
+        titleCase(data.district), titleCase(data.province), titleCase(data.department),
+      ].filter(Boolean).join(', ')
+        + (data.recipient === 'otra' && data.recipientName.trim() ? ` · Recibe: ${data.recipientName.trim()}${data.recipientPhone.trim() ? ' (' + data.recipientPhone.trim() + ')' : ''}` : '')
+    const order = { customer, email, total, region, items, phone: data.phone.trim(), address }
 
     // Mercado Pago: crea la preferencia y redirige a la pasarela (Checkout Pro).
     if (data.payment === 'mercadopago') {

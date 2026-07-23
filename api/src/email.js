@@ -80,17 +80,47 @@ export async function sendQuote(q) {
   return send(to, `Cotización — ${q.name || 'Cliente'}${q.company ? ' (' + q.company + ')' : ''}`, html)
 }
 
+// Aviso interno del pedido para la TIENDA (con datos de contacto y entrega).
+function storeOrderHtml(order) {
+  const rows = [
+    ['Cliente', order.customer], ['Correo', order.email], ['Teléfono', order.phone],
+    ['Dirección', order.address], ['Región', order.region], ['Pago', order.payment],
+    ['Estado', order.status || 'Pendiente'],
+  ].filter(([, v]) => v && String(v).trim() && v !== '—')
+  return shell('Pedido', `
+    <h2 style="font-size:18px;margin:0 0 6px">Nuevo pedido ${order.code}</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 14px">
+      ${rows.map(([k, v]) => `<tr><td style="padding:5px 0;color:#64748b;width:110px">${k}</td><td style="padding:5px 0;font-weight:600">${v}</td></tr>`).join('')}
+    </table>
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      ${(order.items || []).map((i) => `<tr>
+        <td style="padding:7px 0;border-bottom:1px solid #eef1f6">${i.name} <span style="color:#64748b">× ${i.qty}</span></td>
+        <td style="padding:7px 0;border-bottom:1px solid #eef1f6;text-align:right">${money(i.price * i.qty)}</td></tr>`).join('')}
+      <tr><td style="padding:12px 0 0;font-weight:800">Total</td><td style="padding:12px 0 0;text-align:right;font-weight:800">${money(order.total)}</td></tr>
+    </table>`)
+}
+
+// Confirmación del pedido: correo al CLIENTE + aviso interno a la TIENDA.
+// El aviso interno va a ORDER_TO (o QUOTE_TO, o SMTP_USER por defecto).
 export async function sendOrderConfirmation(order) {
   const t = transport()
-  const to = order?.email
-  if (!to || to === '—') return false
   if (!t) { console.log(`ℹ️  Email no configurado (SMTP_USER/PASS) — se omite la confirmación de ${order.code}`); return false }
-  try {
-    await t.sendMail({
-      from: process.env.MAIL_FROM || `SebasPeru <${process.env.SMTP_USER}>`,
-      to, subject: `Confirmación de tu pedido ${order.code} — SebasPeru`, html: orderHtml(order),
-    })
-    console.log(`📧 Confirmación enviada a ${to} (${order.code})`)
-    return true
-  } catch (e) { console.warn('⚠️  Error enviando email:', e.message); return false }
+  const from = process.env.MAIL_FROM || `SebasPeru <${process.env.SMTP_USER}>`
+  let ok = false
+  const to = order?.email
+  if (to && to !== '—') {
+    try {
+      await t.sendMail({ from, to, subject: `Confirmación de tu pedido ${order.code} — SebasPeru`, html: orderHtml(order) })
+      console.log(`📧 Confirmación enviada a ${to} (${order.code})`)
+      ok = true
+    } catch (e) { console.warn('⚠️  Error enviando email al cliente:', e.message) }
+  }
+  const shop = process.env.ORDER_TO || process.env.QUOTE_TO || process.env.SMTP_USER
+  if (shop && shop !== to) {
+    try {
+      await t.sendMail({ from, to: shop, subject: `Nuevo pedido ${order.code} — ${order.customer || 'Cliente'} (${money(order.total)})`, html: storeOrderHtml(order) })
+      console.log(`📧 Aviso interno enviado a ${shop} (${order.code})`)
+    } catch (e) { console.warn('⚠️  Error enviando aviso interno:', e.message) }
+  }
+  return ok
 }

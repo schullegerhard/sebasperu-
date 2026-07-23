@@ -134,10 +134,19 @@ export default function Checkout() {
     const items = cart.map((i) => ({ name: i.name, qty: i.qty, price: i.price }))
     const customer = `${data.firstName} ${data.lastName}`.trim() || 'Cliente invitado'
     const email = data.email.trim() || '—'
+    // Dirección completa para el despacho (va en el aviso interno a la tienda).
+    const address = data.delivery === 'tienda'
+      ? 'Retiro en tienda — Av. Tecnología 123, Lima'
+      : [
+        data.address.trim() + (data.reference.trim() ? ` (Ref: ${data.reference.trim()})` : ''),
+        titleCase(data.district), titleCase(data.province), titleCase(data.department),
+      ].filter(Boolean).join(', ')
+        + (data.recipient === 'otra' && data.recipientName.trim() ? ` · Recibe: ${data.recipientName.trim()}${data.recipientPhone.trim() ? ' (' + data.recipientPhone.trim() + ')' : ''}` : '')
+    const phone = data.phone.trim()
 
     if (data.payment === 'mercadopago') {
       try {
-        const { init_point } = await Pay.mercadopago({ customer, email, total, region, items })
+        const { init_point } = await Pay.mercadopago({ customer, email, total, region, items, phone, address })
         if (init_point) { window.location.href = init_point; return }
       } catch (err) {
         setSubmitting(false)
@@ -148,7 +157,7 @@ export default function Checkout() {
     }
 
     try {
-      await Orders.create({ customer, email, total, payment: PAYMENTS.find((p) => p.id === data.payment)?.label || data.payment, region, date: new Date().toISOString().slice(0, 10), items })
+      await Orders.create({ customer, email, total, payment: PAYMENTS.find((p) => p.id === data.payment)?.label || data.payment, region, date: new Date().toISOString().slice(0, 10), items, phone, address })
     } catch { /* la API puede no estar corriendo; no bloquea la compra */ }
     clearCart(); setDone(true); window.scrollTo(0, 0)
   }

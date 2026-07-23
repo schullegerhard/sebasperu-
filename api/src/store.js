@@ -236,8 +236,8 @@ export async function listOrders() {
 export async function createOrder(o) {
   if (usingDb) {
     const code = `PED-${Date.now().toString().slice(-6)}`
-    const r = await pool.query('INSERT INTO orders (code,customer,email,total,status,payment,region,date,items) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
-      [code, o.customer, o.email, o.total, 'Pendiente', o.payment, o.region, o.date, JSON.stringify(o.items)])
+    const r = await pool.query('INSERT INTO orders (code,customer,email,total,status,payment,region,date,items,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *',
+      [code, o.customer, o.email, o.total, 'Pendiente', o.payment, o.region, o.date, JSON.stringify(o.items), o.phone || null, o.address || null])
     return r.rows[0]
   }
   const id = mem.oseq++

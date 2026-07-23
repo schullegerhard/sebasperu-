@@ -635,10 +635,10 @@
    object-fit cover, así una foto de otro tamaño no agranda ni deforma el carrusel.
    Sube el arte a 1920×480 px para verlo completo sin recortes. */
 .hero-banner { padding: 0; }
-.hb-viewport { position: relative; border-radius: 0; overflow: hidden; aspect-ratio: 1920 / 480; }
+.hb-viewport { position: relative; border-radius: 0; overflow: hidden; aspect-ratio: 1920 / 480; background: #eef1f6; }
 .hb-track { display: flex; height: 100%; transition: transform .6s cubic-bezier(.4, 0, .2, 1); }
 .hb-slide { flex: 0 0 100%; display: block; height: 100%; }
-.hb-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hb-slide img { width: 100%; height: 100%; object-fit: contain; display: block; } /* contain: la imagen SIEMPRE completa, sin recortes */
 .hb-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 4; width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .7); color: #111; }
 .hb-arrow:hover { background: rgba(255, 255, 255, .92); }
 .hb-arrow.left { left: 14px; } .hb-arrow.right { right: 14px; }
@@ -655,8 +655,8 @@
 .promo-row.promo-solo { grid-template-columns: 1fr; }
 .promo-row.promo-pair { grid-template-columns: 1fr 1fr; }
 .promo-row.promo-trio { grid-template-columns: 1fr 1fr 1fr; }
-.promo-banner { display: block; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 6; }
-.promo-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.promo-banner { display: block; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 6; background: #eef1f6; }
+.promo-banner img { width: 100%; height: 100%; object-fit: contain; display: block; } /* contain: la imagen SIEMPRE completa, sin recortes */
 @media (max-width: 760px) { .promo-row.promo-pair, .promo-row.promo-trio { grid-template-columns: 1fr; } }
 
 /* ============ Features: banda blanca de ancho completo (diseño) ============ */

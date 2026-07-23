@@ -121,10 +121,10 @@ app.patch('/api/categories/:slug/move', requireAuth, requireRole(), wrap(async (
 
 /* ------------------------------- PEDIDOS ------------------------------- */
 app.post('/api/orders', wrap(async (req, res) => {
-  const { customer, email, total, payment, region, date, items } = req.body || {}
+  const { customer, email, total, payment, region, date, items, phone, address } = req.body || {}
   if (!total || !items) return res.status(400).json({ error: 'Faltan campos del pedido' })
-  const order = await createOrder({ customer: customer || 'Invitado', email: email || '—', total, payment: payment || 'N/D', region: region || 'Lima', date: date || new Date().toISOString().slice(0, 10), items })
-  sendOrderConfirmation(order).catch(() => {}) // correo de confirmación (no bloquea)
+  const order = await createOrder({ customer: customer || 'Invitado', email: email || '—', total, payment: payment || 'N/D', region: region || 'Lima', date: date || new Date().toISOString().slice(0, 10), items, phone, address })
+  sendOrderConfirmation(order).catch(() => {}) // correo al cliente + aviso a la tienda (no bloquea)
   res.status(201).json(order)
 }))
 
@@ -134,9 +134,9 @@ const publicBaseUrl = (req) => process.env.PUBLIC_URL || `${req.protocol}://${re
 app.get('/api/pay/config', (req, res) => res.json({ mercadopago: mpConfigured() }))
 app.post('/api/pay/mercadopago', wrap(async (req, res) => {
   if (!mpConfigured()) return res.status(503).json({ error: 'Mercado Pago no está configurado (falta MP_ACCESS_TOKEN).' })
-  const { customer, email, total, items, region } = req.body || {}
+  const { customer, email, total, items, region, phone, address } = req.body || {}
   if (!total || !items?.length) return res.status(400).json({ error: 'Faltan campos del pedido' })
-  const order = await createOrder({ customer: customer || 'Invitado', email: email || '—', total, payment: 'Mercado Pago', region: region || 'Lima', date: new Date().toISOString().slice(0, 10), items })
+  const order = await createOrder({ customer: customer || 'Invitado', email: email || '—', total, payment: 'Mercado Pago', region: region || 'Lima', date: new Date().toISOString().slice(0, 10), items, phone, address })
   const base = publicBaseUrl(req)
   const pref = await createPreference(order, {
     success: `${base}/checkout?status=success&order=${order.id}`,
